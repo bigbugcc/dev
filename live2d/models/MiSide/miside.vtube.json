@@ -1,10 +1,10 @@
 {
     "Version": 1,
-    "Name": "3",
+    "Name": "miside",
     "ModelID": "d0c41ac49af74bd6b9c5a9578205469e",
     "FileReferences": {
         "Icon": "",
-        "Model": "3.model3.json",
+        "Model": "miside.model3.json",
         "IdleAnimation": "",
         "IdleAnimationWhenTrackingLost": ""
     },

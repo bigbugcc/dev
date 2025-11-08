@@ -1,12 +1,8 @@
-var 引流 = [
-  "https://space.bilibili.com/672328094"
-]
-
 const initConfig = {
   mode: "fixed",
   hidden: true,
   content: {
-    link: 引流[Math.floor(Math.random() * 引流.length)],
+    link: "https://bughero.net",
     welcome: ["Hi!"],
     touch: "",
     skin: ["诶，想看看其他团员吗？", "替换后入场文本"],
@@ -21,7 +17,7 @@ const initConfig = {
   model: [
     "models/Diana/Diana.model3.json",
     "models/Ava/Ava.model3.json",
-    "models/MiSide/3.model3.json",
+    "models/MiSide/Miside.model3.json",
     "models/HuDie/i小蝴蝶.model3.json"
   ],
   tips: true,
@@ -56,8 +52,42 @@ function onModelLoad(model) {
   ]
 
   function playAction(action) {
-    action.text && pio_reference.modules.render(action.text)
-    action.motion && pio_reference.model.motion(action.motion)
+
+  // 尝试不同的可能 API 调用方式
+  if (action.text) {
+    // 方式1: 直接调用 showMessage
+    if (typeof pio_reference.showMessage === 'function') {
+      pio_reference.showMessage(action.text)
+    }
+    // 方式2: 通过 modules.render
+    else if (pio_reference.modules && typeof pio_reference.modules.render === 'function') {
+      pio_reference.modules.render(action.text)
+    }
+    // 方式3: 直接 render
+    else if (typeof pio_reference.render === 'function') {
+      pio_reference.render(action.text)
+    }
+    else {
+      console.warn('无法显示文本:', action.text)
+      console.log('pio_reference 对象:', pio_reference)
+    }
+  }
+  
+  if (action.motion) {
+    // 尝试不同的动作调用方式
+    if (pio_reference.model && typeof pio_reference.model.motion === 'function') {
+      pio_reference.model.motion(action.motion)
+    }
+    else if (typeof pio_reference.motion === 'function') {
+      pio_reference.motion(action.motion)
+    }
+    else {
+      console.warn('无法播放动作:', action.motion)
+    }
+  }
+
+    // action.text && pio_reference.modules.render(action.text)
+    // action.motion && pio_reference.model.motion(action.motion)
 
     if (action.from && action.to) {
       Object.keys(action.from).forEach(id => {
