@@ -40,54 +40,21 @@ function onModelLoad(model) {
   const coreModel = model.internalModel.coreModel
   const motionManager = model.internalModel.motionManager
 
+  //默认触摸反应
   let touchList = [
     {
-      text: "点击展示文本1",
+      text: "Hey there!",
       motion: "Idle"
     },
     {
-      text: "点击展示文本2",
+      text: "Hey, what's up?",
       motion: "Idle"
     }
   ]
 
   function playAction(action) {
-
-  // 尝试不同的可能 API 调用方式
-  if (action.text) {
-    // 方式1: 直接调用 showMessage
-    if (typeof pio_reference.showMessage === 'function') {
-      pio_reference.showMessage(action.text)
-    }
-    // 方式2: 通过 modules.render
-    else if (pio_reference.modules && typeof pio_reference.modules.render === 'function') {
-      pio_reference.modules.render(action.text)
-    }
-    // 方式3: 直接 render
-    else if (typeof pio_reference.render === 'function') {
-      pio_reference.render(action.text)
-    }
-    else {
-      console.warn('无法显示文本:', action.text)
-      console.log('pio_reference 对象:', pio_reference)
-    }
-  }
-  
-  if (action.motion) {
-    // 尝试不同的动作调用方式
-    if (pio_reference.model && typeof pio_reference.model.motion === 'function') {
-      pio_reference.model.motion(action.motion)
-    }
-    else if (typeof pio_reference.motion === 'function') {
-      pio_reference.motion(action.motion)
-    }
-    else {
-      console.warn('无法播放动作:', action.motion)
-    }
-  }
-
-    // action.text && pio_reference.modules.render(action.text)
-    // action.motion && pio_reference.model.motion(action.motion)
+    action.text && pio_reference.modules.message(action.text)
+    action.motion && pio_reference.model.motion(action.motion)
 
     if (action.from && action.to) {
       Object.keys(action.from).forEach(id => {
