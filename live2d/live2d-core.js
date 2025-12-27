@@ -29,7 +29,7 @@
 
   const RESOURCES = {
     css: [
-      'live2d-widget.css'
+      'libs/live2d.css'
     ],
     js: [
       'libs/live2dcubismcore.min.js',
@@ -80,7 +80,11 @@
       for (const js of RESOURCES.js) {
         await loadScript(js);
       }
-      console.log('[Live2D] 资源加载完成');
+
+      console.log('%c Live2D %c 资源加载完成 ', 
+        'color: #fff; padding: 5px 0; background: #85a7d4;',
+        'padding: 5px 0; background: #b8d9e8;');
+
     } catch (err) {
       console.error('[Live2D] 资源加载错误:', err);
       throw err;
@@ -390,8 +394,4 @@
   }).catch(err => {
     console.error('[Live2D] 资源加载失败:', err);
   });
-
-  console.log('%c Live2D Widget %c Auto-Loading Version ', 
-    'color: #fff; padding: 5px 0; background: #673ab7;', 
-    'padding: 5px 0; background: #efefef;');
 })();
