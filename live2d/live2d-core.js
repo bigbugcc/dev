@@ -1,10 +1,69 @@
 /**
- * Live2D 简化核心模块
- * 合并了 pio.js, pio_sdk4.js, load.js
+ * Live2D 核心模块
  */
 
 (function() {
   'use strict';
+
+  // ==================== 资源加载器 ====================
+  const BASE_PATH = (function() {
+    const scripts = document.getElementsByTagName('script');
+    const currentScript = scripts[scripts.length - 1];
+    const src = currentScript.src;
+    return src.substring(0, src.lastIndexOf('/') + 1);
+  })();
+
+  const RESOURCES = {
+    css: [
+      'live2d-widget.css'
+    ],
+    js: [
+      'libs/live2dcubismcore.min.js',
+      'libs/pixi.min.js',
+      'libs/cubism4.min.js',
+      'libs/TweenLite.js'
+    ]
+  };
+
+  // 加载 CSS
+  function loadCSS(href) {
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = BASE_PATH + href;
+      link.onload = resolve;
+      link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
+      document.head.appendChild(link);
+    });
+  }
+
+  // 加载 JS (按顺序)
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = BASE_PATH + src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  // 顺序加载所有资源
+  async function loadAllResources() {
+    console.log('[Live2D] 开始加载资源...');
+    
+    // 并行加载 CSS
+    await Promise.all(RESOURCES.css.map(loadCSS));
+    console.log('[Live2D] CSS 加载完成');
+    
+    // 顺序加载 JS (有依赖关系)
+    for (const js of RESOURCES.js) {
+      await loadScript(js);
+      console.log(`[Live2D] 已加载: ${js}`);
+    }
+    
+    console.log('[Live2D] 所有资源加载完成');
+  }
 
   // ==================== 配置 ====================
   const CONFIG = {
@@ -299,12 +358,20 @@
   // ==================== 导出 ====================
   window.Live2DWidget = Live2DWidget;
   
-  // 自动初始化
-  window.addEventListener('DOMContentLoaded', () => {
-    window.live2d = new Live2DWidget();
+  // 自动加载资源并初始化
+  loadAllResources().then(() => {
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', () => {
+        window.live2d = new Live2DWidget();
+      });
+    } else {
+      window.live2d = new Live2DWidget();
+    }
+  }).catch(err => {
+    console.error('[Live2D] 资源加载失败:', err);
   });
 
-  console.log('%c Live2D Widget %c Simplified Version ', 
+  console.log('%c Live2D Widget %c Auto-Loading Version ', 
     'color: #fff; padding: 5px 0; background: #673ab7;', 
     'padding: 5px 0; background: #efefef;');
 })();
