@@ -6,11 +6,25 @@
   'use strict';
 
   // ==================== 资源加载器 ====================
+  // 获取当前脚本的基础路径
   const BASE_PATH = (function() {
+    // document.currentScript
+    if (document.currentScript && document.currentScript.src) {
+      const src = document.currentScript.src;
+      return src.substring(0, src.lastIndexOf('/') + 1);
+    }
+    
+    // 遍历查找 live2d-core.js
     const scripts = document.getElementsByTagName('script');
-    const currentScript = scripts[scripts.length - 1];
-    const src = currentScript.src;
-    return src.substring(0, src.lastIndexOf('/') + 1);
+    for (let i = scripts.length - 1; i >= 0; i--) {
+      const src = scripts[i].src;
+      if (src && src.indexOf('live2d-core.js') !== -1) {
+        return src.substring(0, src.lastIndexOf('/') + 1);
+      }
+    }
+    
+    // 回退到当前页面路径
+    return window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
   })();
 
   const RESOURCES = {
@@ -27,42 +41,50 @@
 
   // 加载 CSS
   function loadCSS(href) {
+    const fullUrl = BASE_PATH + href;
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = BASE_PATH + href;
+      link.href = fullUrl;
       link.onload = resolve;
-      link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
+      link.onerror = () => {
+        console.error('[Live2D] CSS 加载失败:', fullUrl);
+        reject(new Error(`Failed to load CSS: ${href}`));
+      };
       document.head.appendChild(link);
     });
   }
 
-  // 加载 JS (按顺序)
+  // 加载 JS
   function loadScript(src) {
+    const fullUrl = BASE_PATH + src;
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = BASE_PATH + src;
+      script.type = 'text/javascript';
+      script.src = fullUrl;
       script.onload = resolve;
-      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+      script.onerror = () => {
+        console.error('[Live2D] JS 加载失败:', fullUrl);
+        reject(new Error(`Failed to load: ${src}`));
+      };
       document.head.appendChild(script);
     });
   }
 
   // 顺序加载所有资源
   async function loadAllResources() {
-    console.log('[Live2D] 开始加载资源...');
-    
-    // 并行加载 CSS
-    await Promise.all(RESOURCES.css.map(loadCSS));
-    console.log('[Live2D] CSS 加载完成');
-    
-    // 顺序加载 JS (有依赖关系)
-    for (const js of RESOURCES.js) {
-      await loadScript(js);
-      console.log(`[Live2D] 已加载: ${js}`);
+    try {
+      // 并行加载 CSS
+      await Promise.all(RESOURCES.css.map(loadCSS));
+      // 顺序加载 JS (有依赖关系)
+      for (const js of RESOURCES.js) {
+        await loadScript(js);
+      }
+      console.log('[Live2D] 资源加载完成');
+    } catch (err) {
+      console.error('[Live2D] 资源加载错误:', err);
+      throw err;
     }
-    
-    console.log('[Live2D] 所有资源加载完成');
   }
 
   // ==================== 配置 ====================
@@ -71,10 +93,10 @@
     hidden: true,           // 移动端隐藏
     tips: true,             // 显示时间问候
     models: [
-      'models/Diana/Diana.model3.json',
-      'models/Ava/Ava.model3.json',
-      'models/MiSide/Miside.model3.json',
-      'models/HuDie/i小蝴蝶.model3.json'
+      BASE_PATH + 'models/Diana/Diana.model3.json',
+      BASE_PATH + 'models/Ava/Ava.model3.json',
+      BASE_PATH + 'models/MiSide/Miside.model3.json',
+      BASE_PATH + 'models/HuDie/i小蝴蝶.model3.json'
     ],
     messages: {
       welcome: ['Hi!'],
@@ -216,8 +238,6 @@
     }
 
     loadModel(url) {
-      console.log('[Live2D] 加载模型:', url);
-      
       // 移除旧模型
       if (this.app.stage.children.length > 0) {
         this.app.stage.removeChildAt(0);
