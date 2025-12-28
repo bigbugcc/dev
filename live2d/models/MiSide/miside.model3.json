@@ -1,14 +1,14 @@
 {
 	"Version": 3,
 	"FileReferences": {
-		"Moc": "miside.moc3",
+		"Moc": "MiSide.moc3",
 		"Textures": [
-			"miside.4096/texture_00.png",
-			"miside.4096/texture_01.png"
+			"MiSide.4096/texture_00.png",
+			"MiSide.4096/texture_01.png"
 		],
-		"Physics": "miside.physics3.json",
-		"DisplayInfo": "miside.cdi3.json",
-		"MotionSync": "miside.motionsync3.json"
+		"Physics": "MiSide.physics3.json",
+		"DisplayInfo": "MiSide.cdi3.json",
+		"MotionSync": "MiSide.motionsync3.json"
 	},
 	"Groups": [
 		{

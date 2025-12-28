@@ -99,7 +99,7 @@
     models: [
       BASE_PATH + 'models/Diana/Diana.model3.json',
       BASE_PATH + 'models/Ava/Ava.model3.json',
-      BASE_PATH + 'models/MiSide/Miside.model3.json',
+      BASE_PATH + 'models/MiSide/miside.model3.json',
       BASE_PATH + 'models/HuDie/i小蝴蝶.model3.json'
     ],
     messages: {
