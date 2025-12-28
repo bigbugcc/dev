@@ -100,7 +100,7 @@
       BASE_PATH + 'models/Diana/Diana.model3.json',
       BASE_PATH + 'models/Ava/Ava.model3.json',
       BASE_PATH + 'models/MiSide/MiSide.model3.json',
-      BASE_PATH + 'models/HuDie/i小蝴蝶.model3.json'
+      BASE_PATH + 'models/HuDie/HuDie.model3.json'
     ],
     messages: {
       welcome: ['Hi!'],
