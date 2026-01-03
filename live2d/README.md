@@ -9,6 +9,7 @@
 - 🎯 简单易用的 API
 
 ## 🚀 快速开始
+[Live演示🎉](https://bigbugcc.github.io/dev/live2d/index.html)
 
 ### 方法一：使用 CDN
 
