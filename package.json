@@ -1,0 +1,13 @@
+{
+  "name": "live2d-project",
+  "version": "1.0.0",
+  "description": "Live2D project with CDN refresh automation",
+  "main": "index.js",
+  "scripts": {
+    "refresh-cdn": "node scripts/refresh-cdn.js"
+  },
+  "dependencies": {
+    "tencentcloud-sdk-nodejs-teo": "^4.0.0",
+    "tencentcloud-sdk-nodejs-common": "^4.0.0"
+  }
+}
