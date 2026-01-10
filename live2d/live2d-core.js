@@ -100,6 +100,7 @@
       BASE_PATH + 'models/Diana/Diana.model3.json',
       BASE_PATH + 'models/Ava/Ava.model3.json',
       BASE_PATH + 'models/MiSide/MiSide.model3.json',
+      BASE_PATH + 'models/Hackclaw/Hackclaw.model3.json',
       BASE_PATH + 'models/HuDie/HuDie.model3.json'
     ],
     messages: {

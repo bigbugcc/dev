@@ -1,0 +1,605 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "Param",
+			"GroupId": "ParamGroup",
+			"Name": "口罩"
+		},
+		{
+			"Id": "Param2",
+			"GroupId": "ParamGroup",
+			"Name": "红眼"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "ParamGroup",
+			"Name": "拿刀"
+		},
+		{
+			"Id": "Param4",
+			"GroupId": "ParamGroup",
+			"Name": "脸红"
+		},
+		{
+			"Id": "Param5",
+			"GroupId": "ParamGroup",
+			"Name": "脸黑"
+		},
+		{
+			"Id": "Param6",
+			"GroupId": "ParamGroup",
+			"Name": "拿枪"
+		},
+		{
+			"Id": "Param7",
+			"GroupId": "ParamGroup",
+			"Name": "开枪"
+		},
+		{
+			"Id": "Param16",
+			"GroupId": "ParamGroup",
+			"Name": "开枪"
+		},
+		{
+			"Id": "Param8",
+			"GroupId": "ParamGroup2",
+			"Name": "参数34"
+		},
+		{
+			"Id": "Param9",
+			"GroupId": "ParamGroup2",
+			"Name": "参数35"
+		},
+		{
+			"Id": "Param10",
+			"GroupId": "ParamGroup2",
+			"Name": "st"
+		},
+		{
+			"Id": "Param11",
+			"GroupId": "ParamGroup2",
+			"Name": "参数37"
+		},
+		{
+			"Id": "Param12",
+			"GroupId": "ParamGroup2",
+			"Name": "x"
+		},
+		{
+			"Id": "Param13",
+			"GroupId": "ParamGroup2",
+			"Name": "参数39"
+		},
+		{
+			"Id": "Param14",
+			"GroupId": "ParamGroup3",
+			"Name": "切换"
+		},
+		{
+			"Id": "Param15",
+			"GroupId": "ParamGroup3",
+			"Name": "参数41"
+		},
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "",
+			"Name": "角度 X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "",
+			"Name": "角度 Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "",
+			"Name": "角度 Z"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "",
+			"Name": "身体旋转　X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "",
+			"Name": "身体旋转　Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "",
+			"Name": "身体旋转　Z"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "",
+			"Name": "呼吸"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "",
+			"Name": "左眼　开闭"
+		},
+		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "左眼　微笑"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "",
+			"Name": "右眼　开闭"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "右眼　微笑"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "",
+			"Name": "眼珠 X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "",
+			"Name": "眼珠 Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "",
+			"Name": "左眉上下"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "",
+			"Name": "左眉　変形"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "",
+			"Name": "右眉　上下"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "",
+			"Name": "右眉　変形"
+		},
+		{
+			"Id": "ParamBrowLX",
+			"GroupId": "",
+			"Name": "左眉　左右"
+		},
+		{
+			"Id": "ParamBrowRX",
+			"GroupId": "",
+			"Name": "右眉　左右"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "左眉　角度"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "右眉　角度"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "",
+			"Name": "嘴　变形"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "",
+			"Name": "嘴　张开和闭合"
+		},
+		{
+			"Id": "ParamCheek",
+			"GroupId": "",
+			"Name": "脸颊泛红"
+		},
+		{
+			"Id": "ParamHairFront",
+			"GroupId": "",
+			"Name": "摇动 前发"
+		},
+		{
+			"Id": "ParamHairSide",
+			"GroupId": "",
+			"Name": "摇动 侧发"
+		},
+		{
+			"Id": "ParamHairBack",
+			"GroupId": "",
+			"Name": "摇动 后发"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "Folder 1"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "Folder 2"
+		},
+		{
+			"Id": "ParamGroup3",
+			"GroupId": "",
+			"Name": "Folder 3"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "Part13",
+			"Name": "拿刀"
+		},
+		{
+			"Id": "Part16",
+			"Name": "拿枪2"
+		},
+		{
+			"Id": "Part98",
+			"Name": "手枪"
+		},
+		{
+			"Id": "Part",
+			"Name": "主体"
+		},
+		{
+			"Id": "PartSketch0",
+			"Name": "[ 参考图 ]"
+		},
+		{
+			"Id": "Part99",
+			"Name": "开枪特效"
+		},
+		{
+			"Id": "Part100",
+			"Name": "灰色"
+		},
+		{
+			"Id": "Part101",
+			"Name": "衣带"
+		},
+		{
+			"Id": "Part102",
+			"Name": "毛"
+		},
+		{
+			"Id": "Part11",
+			"Name": "红眼"
+		},
+		{
+			"Id": "Part2",
+			"Name": "前发"
+		},
+		{
+			"Id": "Part90",
+			"Name": "脸红"
+		},
+		{
+			"Id": "Part80",
+			"Name": "左眼"
+		},
+		{
+			"Id": "Part37",
+			"Name": "左眼"
+		},
+		{
+			"Id": "Part6",
+			"Name": "脸和五官"
+		},
+		{
+			"Id": "Part39",
+			"Name": "衣服"
+		},
+		{
+			"Id": "Part60",
+			"Name": "腿"
+		},
+		{
+			"Id": "Part68",
+			"Name": "上身"
+		},
+		{
+			"Id": "Part72",
+			"Name": "手"
+		},
+		{
+			"Id": "Part78",
+			"Name": "后发"
+		},
+		{
+			"Id": "Part3",
+			"Name": "红毛"
+		},
+		{
+			"Id": "Part4",
+			"Name": "前刘海"
+		},
+		{
+			"Id": "Part81",
+			"Name": "右"
+		},
+		{
+			"Id": "Part82",
+			"Name": "右"
+		},
+		{
+			"Id": "Part83",
+			"Name": "右"
+		},
+		{
+			"Id": "Part84",
+			"Name": "右"
+		},
+		{
+			"Id": "Part85",
+			"Name": "右"
+		},
+		{
+			"Id": "Part86",
+			"Name": "右"
+		},
+		{
+			"Id": "Part87",
+			"Name": "右"
+		},
+		{
+			"Id": "Part10",
+			"Name": "右"
+		},
+		{
+			"Id": "Part15",
+			"Name": "右"
+		},
+		{
+			"Id": "Part18",
+			"Name": "右"
+		},
+		{
+			"Id": "Part12",
+			"Name": "右"
+		},
+		{
+			"Id": "Part22",
+			"Name": "右"
+		},
+		{
+			"Id": "Part25",
+			"Name": "右"
+		},
+		{
+			"Id": "Part28",
+			"Name": "右"
+		},
+		{
+			"Id": "Part7",
+			"Name": "眉毛"
+		},
+		{
+			"Id": "Part8",
+			"Name": "眼睛"
+		},
+		{
+			"Id": "Part30",
+			"Name": "鼻子"
+		},
+		{
+			"Id": "Part31",
+			"Name": "嘴"
+		},
+		{
+			"Id": "Part35",
+			"Name": "脸"
+		},
+		{
+			"Id": "Part5",
+			"Name": "耳麦"
+		},
+		{
+			"Id": "Part36",
+			"Name": "耳朵"
+		},
+		{
+			"Id": "Part40",
+			"Name": "上衣"
+		},
+		{
+			"Id": "Part53",
+			"Name": "裤子"
+		},
+		{
+			"Id": "Part63",
+			"Name": "左腿"
+		},
+		{
+			"Id": "Part67",
+			"Name": "右腿"
+		},
+		{
+			"Id": "Part69",
+			"Name": "肩带"
+		},
+		{
+			"Id": "Part70",
+			"Name": "领子"
+		},
+		{
+			"Id": "Part71",
+			"Name": "胸"
+		},
+		{
+			"Id": "Part73",
+			"Name": "绳子"
+		},
+		{
+			"Id": "Part74",
+			"Name": "右"
+		},
+		{
+			"Id": "Part75",
+			"Name": "左"
+		},
+		{
+			"Id": "Part76",
+			"Name": "袖上"
+		},
+		{
+			"Id": "Part77",
+			"Name": "上衣后"
+		},
+		{
+			"Id": "Part79",
+			"Name": "碎发"
+		},
+		{
+			"Id": "Part9",
+			"Name": "眼眶"
+		},
+		{
+			"Id": "Part14",
+			"Name": "阴影"
+		},
+		{
+			"Id": "Part17",
+			"Name": "阴影2"
+		},
+		{
+			"Id": "Part20",
+			"Name": "眼白"
+		},
+		{
+			"Id": "Part21",
+			"Name": "阴影3"
+		},
+		{
+			"Id": "Part24",
+			"Name": "眼周"
+		},
+		{
+			"Id": "Part27",
+			"Name": "阴影4"
+		},
+		{
+			"Id": "Part32",
+			"Name": "闭口"
+		},
+		{
+			"Id": "Part33",
+			"Name": "牙齿"
+		},
+		{
+			"Id": "Part34",
+			"Name": "口腔"
+		},
+		{
+			"Id": "Part41",
+			"Name": "饰品"
+		},
+		{
+			"Id": "Part42",
+			"Name": "三角装饰"
+		},
+		{
+			"Id": "Part43",
+			"Name": "黑色绳子1"
+		},
+		{
+			"Id": "Part44",
+			"Name": "黑色绳子2"
+		},
+		{
+			"Id": "Part45",
+			"Name": "白色绳子"
+		},
+		{
+			"Id": "Part46",
+			"Name": "红色"
+		},
+		{
+			"Id": "Part47",
+			"Name": "拉链"
+		},
+		{
+			"Id": "Part48",
+			"Name": "毛领"
+		},
+		{
+			"Id": "Part49",
+			"Name": "黑色领子"
+		},
+		{
+			"Id": "Part50",
+			"Name": "红色带扣"
+		},
+		{
+			"Id": "Part54",
+			"Name": "闪光弹"
+		},
+		{
+			"Id": "Part55",
+			"Name": "中间皮带"
+		},
+		{
+			"Id": "Part57",
+			"Name": "腰带"
+		},
+		{
+			"Id": "Part58",
+			"Name": "短裤"
+		},
+		{
+			"Id": "Part59",
+			"Name": "内裤"
+		},
+		{
+			"Id": "Part61",
+			"Name": "腿环r"
+		},
+		{
+			"Id": "Part64",
+			"Name": "左鞋子"
+		},
+		{
+			"Id": "Part65",
+			"Name": "腿"
+		},
+		{
+			"Id": "Part51",
+			"Name": "腿环l"
+		},
+		{
+			"Id": "Part56",
+			"Name": "右"
+		},
+		{
+			"Id": "Part62",
+			"Name": "银色腿环"
+		},
+		{
+			"Id": "Part66",
+			"Name": "小腿"
+		},
+		{
+			"Id": "Part52",
+			"Name": "刀2"
+		}
+	],
+	"CombinedParameters": [
+		[
+			"ParamEyeBallX",
+			"ParamEyeBallY"
+		],
+		[
+			"ParamMouthForm",
+			"ParamMouthOpenY"
+		]
+	]
+}
