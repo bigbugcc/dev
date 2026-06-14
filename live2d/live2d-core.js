@@ -1,152 +1,144 @@
 /**
- * Live2D 核心模块
+ * Live2D widget core.
  */
 
 (function() {
-  'use strict';
+  "use strict";
 
-  // ==================== 资源加载器 ====================
-  // 获取当前脚本的基础路径
-  const BASE_PATH = (function() {
-    // document.currentScript
-    if (document.currentScript && document.currentScript.src) {
-      const src = document.currentScript.src;
-      return src.substring(0, src.lastIndexOf('/') + 1);
-    }
-    
-    // 遍历查找 live2d-core.js
-    const scripts = document.getElementsByTagName('script');
+  const SCRIPT_ELEMENT = (function() {
+    if (document.currentScript) return document.currentScript;
+
+    const scripts = document.getElementsByTagName("script");
     for (let i = scripts.length - 1; i >= 0; i--) {
       const src = scripts[i].src;
-      if (src && src.indexOf('live2d-core.js') !== -1) {
-        return src.substring(0, src.lastIndexOf('/') + 1);
+      if (src && src.indexOf("live2d-core.js") !== -1) {
+        return scripts[i];
       }
     }
-    
-    // 回退到当前页面路径
-    return window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
+    return null;
+  })();
+
+  const BASE_PATH = (function() {
+    if (SCRIPT_ELEMENT && SCRIPT_ELEMENT.src) {
+      const src = SCRIPT_ELEMENT.src;
+      return src.substring(0, src.lastIndexOf("/") + 1);
+    }
+
+    const scripts = document.getElementsByTagName("script");
+    for (let i = scripts.length - 1; i >= 0; i--) {
+      const src = scripts[i].src;
+      if (src && src.indexOf("live2d-core.js") !== -1) {
+        return src.substring(0, src.lastIndexOf("/") + 1);
+      }
+    }
+
+    return window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
   })();
 
   const RESOURCES = {
-    css: [
-      'libs/live2d.css'
-    ],
+    css: ["libs/live2d.css"],
     js: [
-      'libs/live2dcubismcore.min.js',
-      'libs/pixi.min.js',
-      'libs/cubism4.min.js',
-      'libs/TweenLite.js'
-    ]
+      "libs/live2dcubismcore.min.js",
+      "libs/pixi.min.js",
+      "libs/cubism4.min.js",
+      "libs/TweenLite.js",
+    ],
   };
 
-  // 加载 CSS
+  const CONFIG = {
+    alignment: "left",
+    hidden: true,
+    tips: true,
+    manifest: "models/manifest.json",
+    model: "",
+    models: [],
+    messages: {
+      welcome: ["Hi!"],
+      skin: ["Want to switch models?", "The new model is ready."],
+      close: "See you next time.",
+      home: "Back to home.",
+    },
+  };
+
+  const DEFAULT_MODEL_CONFIG = {
+    welcome: "Hi!",
+    touchList: [
+      { text: "Hey there!" },
+      { text: "What's up?" },
+    ],
+  };
+
+  function toUrl(path) {
+    if (/^https?:\/\//i.test(path)) return path;
+    return BASE_PATH + path.replace(/^\/+/, "");
+  }
+
   function loadCSS(href) {
-    const fullUrl = BASE_PATH + href;
+    const fullUrl = toUrl(href);
     return new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
       link.href = fullUrl;
       link.onload = resolve;
-      link.onerror = () => {
-        console.error('[Live2D] CSS 加载失败:', fullUrl);
-        reject(new Error(`Failed to load CSS: ${href}`));
-      };
+      link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
       document.head.appendChild(link);
     });
   }
 
-  // 加载 JS
   function loadScript(src) {
-    const fullUrl = BASE_PATH + src;
+    const fullUrl = toUrl(src);
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
+      const script = document.createElement("script");
+      script.type = "text/javascript";
       script.src = fullUrl;
       script.onload = resolve;
-      script.onerror = () => {
-        console.error('[Live2D] JS 加载失败:', fullUrl);
-        reject(new Error(`Failed to load: ${src}`));
-      };
+      script.onerror = () => reject(new Error(`Failed to load JS: ${src}`));
       document.head.appendChild(script);
     });
   }
 
-  // 顺序加载所有资源
+  async function fetchJSON(path) {
+    const response = await fetch(toUrl(path), { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error(`Failed to load JSON: ${path}`);
+    }
+    return response.json();
+  }
+
+  function readExternalConfig() {
+    const query = new URLSearchParams(window.location.search);
+    const cssElement = document.querySelector(
+      "link[data-live2d-model], link[data-model], style[data-live2d-model], style[data-model]"
+    );
+    const scriptDataset = SCRIPT_ELEMENT ? SCRIPT_ELEMENT.dataset : {};
+    const cssDataset = cssElement ? cssElement.dataset : {};
+    const globalConfig = window.Live2DWidgetConfig || {};
+
+    return {
+      ...globalConfig,
+      model:
+        query.get("live2dModel") ||
+        query.get("live2d-model") ||
+        query.get("model") ||
+        scriptDataset.live2dModel ||
+        scriptDataset.model ||
+        cssDataset.live2dModel ||
+        cssDataset.model ||
+        globalConfig.model ||
+        "",
+    };
+  }
+
   async function loadAllResources() {
-    try {
-      // 并行加载 CSS
-      await Promise.all(RESOURCES.css.map(loadCSS));
-      // 顺序加载 JS (有依赖关系)
-      for (const js of RESOURCES.js) {
-        await loadScript(js);
-      }
-
-      console.log('%c Live2D %c 资源加载完成 ', 
-        'color: #fff; padding: 5px 0; background: #85a7d4;',
-        'padding: 5px 0; background: #b8d9e8;');
-
-    } catch (err) {
-      console.error('[Live2D] 资源加载错误:', err);
-      throw err;
+    await Promise.all(RESOURCES.css.map(loadCSS));
+    for (const js of RESOURCES.js) {
+      await loadScript(js);
     }
   }
 
-  // ==================== 配置 ====================
-  const CONFIG = {
-    alignment: 'left',      // 位置: 'left' | 'right'
-    hidden: true,           // 移动端隐藏
-    tips: true,             // 显示时间问候
-    models: [
-      BASE_PATH + 'models/Diana/Diana.model3.json',
-      BASE_PATH + 'models/Ava/Ava.model3.json',
-      BASE_PATH + 'models/MiSide/MiSide.model3.json',
-      BASE_PATH + 'models/Hackclaw/Hackclaw.model3.json',
-      BASE_PATH + 'models/HuDie/HuDie.model3.json'
-    ],
-    messages: {
-      welcome: ['Hi!'],
-      skin: ['诶，想看看其他团员吗？', '替换后入场文本'],
-      close: 'QWQ 下次再见吧~',
-      home: '点击这里回到首页！'
-    }
-  };
-
-  // ==================== 模型配置 ====================
-  const MODEL_CONFIG = {
-    Diana: {
-      welcome: '我是吃货担当 嘉然 Diana~',
-      initMotion: 'Tap抱阿草-左手',
-      touchList: [
-        { text: '嘉心糖屁用没有', motion: 'Tap生气 -领结' },
-        { text: '有人急了，但我不说是谁~', motion: 'Tap= =  左蝴蝶结' },
-        { text: '呜呜...呜呜呜....', motion: 'Tap哭 -眼角' },
-        { text: '想然然了没有呀~', motion: 'Tap害羞-中间刘海' },
-        { text: '阿草好软呀~', motion: 'Tap抱阿草-左手' },
-        { text: '不要再戳啦！好痒！', motion: 'Tap摇头- 身体' },
-        { text: '嗷呜~~~', motion: 'Tap耳朵-发卡' },
-        { text: 'zzZ。。。', motion: 'Leave' },
-        { text: '哇！好吃的！', motion: 'Tap右头发' }
-      ]
-    },
-    Ava: {
-      welcome: '我是<s>拉胯</s>Gamer担当 向晚 AvA~',
-      initMotion: { motion: 'Tap左眼', from: { Part15: 1 }, to: { Part15: 0 } },
-      hideParts: ['Part5', 'neko', 'game', 'Part15', 'Part21', 'Part22', 'Part', 'Part16', 'Part12'],
-      scaleWidth: 1.2,
-      touchList: [
-        { text: '水母 水母~ 只是普通的生物', motion: 'Tap右手' },
-        { text: '可爱的鸽子鸽子~我喜欢你~', motion: 'Tap胸口项链', from: { Part12: 1 }, to: { Part12: 0 } },
-        { text: '好...好兄弟之间喜欢很正常啦', motion: 'Tap中间刘海', from: { Part12: 1 }, to: { Part12: 0 } },
-        { text: '啊啊啊！怎么推流辣', motion: 'Tap右眼', from: { Part16: 1 }, to: { Part16: 0 } },
-        { text: '你怎么老摸我，我的身体是不是可有魅力', motion: 'Tap嘴' },
-        { text: 'AAAAAAAAAAvvvvAAA 向晚！', motion: 'Tap左眼', from: { Part15: 1 }, to: { Part15: 0 } }
-      ]
-    }
-  };
-
-  // ==================== 工具函数 ====================
   const Utils = {
-    rand: arr => arr[Math.floor(Math.random() * arr.length)],
+    rand: (arr) => arr[Math.floor(Math.random() * arr.length)],
     isMobile: () => window.innerWidth < 500 || /mobile|android|ios/i.test(navigator.userAgent),
     create: (tag, className) => {
       const el = document.createElement(tag);
@@ -155,64 +147,125 @@
     },
     getTimeGreeting: () => {
       const hour = new Date().getHours();
-      if (hour > 22 || hour <= 5) return '你是夜猫子呀？这么晚还不睡觉，明天起的来嘛';
-      if (hour <= 8) return '早上好！';
-      if (hour <= 11) return '上午好！工作顺利嘛，多起来走动走动哦！';
-      if (hour <= 14) return '中午了，现在是午餐时间！';
-      if (hour <= 17) return '午后很容易犯困呢，今天的运动目标完成了吗？';
-      if (hour <= 19) return '傍晚了！窗外夕阳的景色很美丽呢~';
-      if (hour <= 21) return '晚上好，今天过得怎么样？';
-      return '已经这么晚了呀，早点休息吧，晚安~';
-    }
+      if (hour > 22 || hour <= 5) return "It is late. Remember to rest.";
+      if (hour <= 8) return "Good morning!";
+      if (hour <= 11) return "Hope your morning is going well.";
+      if (hour <= 14) return "Lunch time is a good time to take a break.";
+      if (hour <= 17) return "Good afternoon!";
+      if (hour <= 19) return "Good evening!";
+      return "How was your day?";
+    },
+    normalizeModelEntry: (entry) => {
+      if (typeof entry === "string") {
+        const parts = entry.split("/");
+        const file = parts[parts.length - 1] || "";
+        const name = file.replace(/\.model3\.json$/i, "") || entry;
+        return { name, model: entry, config: null };
+      }
+      return entry;
+    },
   };
 
-  // ==================== Live2D 核心类 ====================
   class Live2DWidget {
     constructor(config = {}) {
-      this.config = { ...CONFIG, ...config };
+      this.config = { ...CONFIG, ...readExternalConfig(), ...config };
       this.currentModelIndex = 0;
       this.model = null;
+      this.modelConfig = DEFAULT_MODEL_CONFIG;
+      this.persistentParameters = null;
+      this.persistentDrawables = null;
       this.app = null;
       this.dialogTimer = null;
       this.elements = {};
-      
+
       this.init();
     }
 
-    init() {
+    async init() {
       if (this.config.hidden && Utils.isMobile()) {
-        console.log('[Live2D] 移动端已隐藏');
+        console.log("[Live2D] Hidden on mobile.");
         return;
       }
+
+      await this.loadModels();
+      if (this.config.models.length === 0) {
+        console.error("[Live2D] No models found.");
+        return;
+      }
+      this.selectInitialModel();
 
       this.createContainer();
       this.createPixiApp();
       this.createUI();
-      this.loadModel(this.config.models[0]);
-      
-      // 检查是否被用户关闭
-      if (localStorage.getItem('live2d_hidden') === '1') {
+      await this.loadModel(this.config.models[0]);
+
+      if (localStorage.getItem("live2d_hidden") === "1") {
         this.hide();
       } else {
         this.showWelcome();
       }
     }
 
+    async loadModels() {
+      if (this.config.models.length > 0) {
+        this.config.models = this.config.models.map(Utils.normalizeModelEntry);
+        return;
+      }
+
+      const manifest = await fetchJSON(this.config.manifest);
+      this.config.models = (manifest.models || []).map(Utils.normalizeModelEntry);
+    }
+
+    selectInitialModel() {
+      if (!this.config.model) return;
+
+      const target = String(this.config.model).toLowerCase();
+      const idx = this.config.models.findIndex((entry) => {
+        const model = Utils.normalizeModelEntry(entry);
+        return (
+          String(model.name || "").toLowerCase() === target ||
+          String(model.model || "").toLowerCase() === target ||
+          String(model.model || "").toLowerCase().endsWith(`/${target}.model3.json`)
+        );
+      });
+
+      if (idx !== -1) {
+        const [entry] = this.config.models.splice(idx, 1);
+        this.config.models.unshift(entry);
+        this.currentModelIndex = 0;
+      } else {
+        console.warn("[Live2D] Configured model was not found:", this.config.model);
+      }
+    }
+
+    async loadModelConfig(entry) {
+      if (!entry.config) {
+        return { ...DEFAULT_MODEL_CONFIG, name: entry.name };
+      }
+
+      try {
+        const config = await fetchJSON(`models/${entry.config}`);
+        return { ...DEFAULT_MODEL_CONFIG, ...config, name: entry.name };
+      } catch (err) {
+        console.warn("[Live2D] Model config load failed:", entry.config, err);
+        return { ...DEFAULT_MODEL_CONFIG, name: entry.name };
+      }
+    }
+
     createContainer() {
-      const container = Utils.create('div', `pio-container ${this.config.alignment}`);
-      container.id = 'pio-container';
-      
-      const action = Utils.create('div', 'pio-action');
-      const canvas = Utils.create('canvas');
-      canvas.id = 'pio';
-      const dialog = Utils.create('div', 'pio-dialog');
-      const showBtn = Utils.create('div', 'pio-show');
-      
+      const container = Utils.create("div", `pio-container ${this.config.alignment}`);
+      container.id = "pio-container";
+
+      const action = Utils.create("div", "pio-action");
+      const canvas = Utils.create("canvas");
+      canvas.id = "pio";
+      const dialog = Utils.create("div", "pio-dialog");
+      const showBtn = Utils.create("div", "pio-show");
+
       container.append(action, canvas, dialog, showBtn);
       document.body.appendChild(container);
-      
+
       this.elements = { container, action, canvas, dialog, showBtn };
-      
       showBtn.onclick = () => this.show();
     }
 
@@ -220,122 +273,132 @@
       this.app = new PIXI.Application({
         view: this.elements.canvas,
         transparent: true,
-        autoStart: true
+        autoStart: true,
+      });
+      this.app.ticker.add(() => {
+        if (this.persistentParameters) {
+          this.setParameters(this.persistentParameters);
+        }
+        if (this.persistentDrawables) {
+          this.hideDrawables(this.persistentDrawables);
+        }
       });
     }
 
     createUI() {
       const buttons = [
-        { name: 'home', title: this.config.messages.home, click: () => location.href = '/' },
-        { name: 'skin', title: this.config.messages.skin[0], click: () => this.nextModel() },
-        { name: 'info', title: '想了解更多关于我的信息吗？', click: () => {} },
-        { name: 'close', title: this.config.messages.close, click: () => this.hide() }
+        { name: "home", title: this.config.messages.home, click: () => (location.href = "/") },
+        { name: "skin", title: this.config.messages.skin[0], click: () => this.nextModel() },
+        { name: "info", title: "Live2D", click: () => {} },
+        { name: "close", title: this.config.messages.close, click: () => this.hide() },
       ];
 
-      buttons.forEach(btn => {
-        if (btn.name === 'skin' && this.config.models.length <= 1) return;
-        
-        const span = Utils.create('span', `pio-${btn.name}`);
+      buttons.forEach((btn) => {
+        if (btn.name === "skin" && this.config.models.length <= 1) return;
+
+        const span = Utils.create("span", `pio-${btn.name}`);
         span.onclick = btn.click;
         span.onmouseover = () => this.showMessage(btn.title);
         this.elements.action.appendChild(span);
       });
     }
 
-    loadModel(url) {
-      // 移除旧模型
+    async loadModel(entry, showSwitchMessage = false) {
+      const modelEntry = Utils.normalizeModelEntry(entry);
+      this.modelConfig = await this.loadModelConfig(modelEntry);
+
       if (this.app.stage.children.length > 0) {
-        this.app.stage.removeChildAt(0);
+        this.app.stage.removeChildren();
       }
 
-      const model = PIXI.live2d.Live2DModel.fromSync(url);
-      
-      model.once('load', () => {
+      const model = PIXI.live2d.Live2DModel.fromSync(toUrl(`models/${modelEntry.model}`));
+
+      model.once("load", () => {
         this.model = model;
         this.app.stage.addChild(model);
-        
-        // 缩放适配
+
         const scale = this.elements.canvas.height / model.height;
         model.scale.set(scale);
-        this.elements.canvas.width = model.width;
+        this.elements.canvas.width = this.modelConfig.scaleWidth
+          ? model.width * this.modelConfig.scaleWidth
+          : model.width;
         this.elements.canvas.height = model.height;
-        
-        // 对齐
-        model.x = this.config.alignment === 'left' ? 0 : this.elements.canvas.width - model.width;
-        
-        // 应用模型特定配置
-        this.applyModelConfig(model);
-        this.setupModelInteraction(model);
+        model.x = this.config.alignment === "left" ? 0 : this.elements.canvas.width - model.width;
+
+        this.applyModelConfig(model, this.modelConfig);
+        this.setupModelInteraction(model, this.modelConfig);
+
+        if (showSwitchMessage) {
+          this.showMessage(this.modelConfig.welcome || this.config.messages.skin[1]);
+        }
       });
     }
 
-    applyModelConfig(model) {
-      const modelName = model.internalModel.settings.name;
-      const cfg = MODEL_CONFIG[modelName];
-      
-      if (!cfg) return;
-      
-      this.elements.container.dataset.model = modelName;
-      this.config.messages.skin[1] = cfg.welcome;
-      
-      // 隐藏特定部件
+    applyModelConfig(model, cfg) {
+      this.elements.container.dataset.model = cfg.name;
+      this.config.messages.skin[1] = cfg.welcome || this.config.messages.skin[1];
+
       if (cfg.hideParts) {
         const coreModel = model.internalModel.coreModel;
-        cfg.hideParts.forEach(partId => {
+        cfg.hideParts.forEach((partId) => {
           const idx = coreModel._partIds.indexOf(partId);
           if (idx !== -1) coreModel._partOpacities[idx] = 0;
         });
       }
-      
-      // 调整宽度
-      if (cfg.scaleWidth) {
-        this.elements.canvas.width = model.width * cfg.scaleWidth;
+
+      if (cfg.hideDrawables) {
+        this.persistentDrawables = cfg.hideDrawables;
+        this.hideDrawables(cfg.hideDrawables, model);
+      } else {
+        this.persistentDrawables = null;
       }
-      
-      // 初始动作
+
+      if (cfg.parameters) {
+        this.persistentParameters = cfg.parameters;
+        this.setParameters(cfg.parameters, model);
+      } else {
+        this.persistentParameters = null;
+      }
+
       if (cfg.initMotion) {
         this.playAction(cfg.initMotion, model);
       }
     }
 
-    setupModelInteraction(model) {
-      const modelName = model.internalModel.settings.name;
-      const cfg = MODEL_CONFIG[modelName];
-      const touchList = cfg?.touchList || [
-        { text: 'Hey there!', motion: 'Idle' },
-        { text: "Hey, what's up?", motion: 'Idle' }
-      ];
+    setupModelInteraction(model, cfg) {
+      const touchList = cfg.touchList || DEFAULT_MODEL_CONFIG.touchList;
 
       this.elements.canvas.onclick = () => {
         const motionManager = model.internalModel.motionManager;
-        if (motionManager.state.currentGroup !== 'Idle') return;
-        
+        if (motionManager.state.currentGroup && motionManager.state.currentGroup !== "Idle") return;
+
         const action = Utils.rand(touchList);
         this.playAction(action, model);
       };
     }
 
     playAction(action, model = this.model) {
-      if (!model) return;
-      
-      if (typeof action === 'string') {
+      if (!model || !action) return;
+
+      if (typeof action === "string") {
         model.motion(action);
         return;
       }
-      
+
       if (action.text) this.showMessage(action.text);
+      if (action.parameters) this.setParameters(action.parameters, model);
       if (action.motion) model.motion(action.motion);
-      
+
       if (action.from && action.to) {
         const coreModel = model.internalModel.coreModel;
         const motionManager = model.internalModel.motionManager;
-        
+
         Object.entries(action.from).forEach(([id, val]) => {
           const idx = coreModel._partIds.indexOf(id);
           if (idx !== -1) TweenLite.to(coreModel._partOpacities, 0.6, { [idx]: val });
         });
-        
-        motionManager.once('motionFinish', () => {
+
+        motionManager.once("motionFinish", () => {
           Object.entries(action.to).forEach(([id, val]) => {
             const idx = coreModel._partIds.indexOf(id);
             if (idx !== -1) TweenLite.to(coreModel._partOpacities, 0.6, { [idx]: val });
@@ -344,19 +407,48 @@
       }
     }
 
+    setParameters(parameters, model = this.model) {
+      if (!model || !parameters) return;
+
+      const coreModel = model.internalModel.coreModel;
+      Object.entries(parameters).forEach(([id, value]) => {
+        if (typeof coreModel.setParameterValueById === "function") {
+          coreModel.setParameterValueById(id, value);
+          return;
+        }
+
+        const ids = coreModel._parameterIds || [];
+        const values = coreModel._parameterValues || [];
+        const idx = ids.indexOf(id);
+        if (idx !== -1) values[idx] = value;
+      });
+    }
+
+    hideDrawables(drawableIds, model = this.model) {
+      if (!model || !drawableIds || drawableIds.length === 0) return;
+
+      const coreModel = model.internalModel.coreModel;
+      const ids = coreModel._drawableIds || [];
+      const opacities = coreModel._drawableOpacities || [];
+
+      drawableIds.forEach((id) => {
+        const idx = ids.indexOf(id);
+        if (idx !== -1) opacities[idx] = 0;
+      });
+    }
+
     nextModel() {
       this.currentModelIndex = (this.currentModelIndex + 1) % this.config.models.length;
-      this.loadModel(this.config.models[this.currentModelIndex]);
-      this.showMessage(this.config.messages.skin[1] || '新衣服真漂亮~');
+      this.loadModel(this.config.models[this.currentModelIndex], true);
     }
 
     showMessage(text) {
       const dialog = this.elements.dialog;
       dialog.innerHTML = Array.isArray(text) ? Utils.rand(text) : text;
-      dialog.classList.add('active');
-      
+      dialog.classList.add("active");
+
       clearTimeout(this.dialogTimer);
-      this.dialogTimer = setTimeout(() => dialog.classList.remove('active'), 3000);
+      this.dialogTimer = setTimeout(() => dialog.classList.remove("active"), 3000);
     }
 
     showWelcome() {
@@ -368,31 +460,31 @@
     }
 
     hide() {
-      this.elements.container.classList.add('hidden');
-      this.elements.dialog.classList.remove('active');
-      localStorage.setItem('live2d_hidden', '1');
+      this.elements.container.classList.add("hidden");
+      this.elements.dialog.classList.remove("active");
+      localStorage.setItem("live2d_hidden", "1");
     }
 
     show() {
-      this.elements.container.classList.remove('hidden');
-      localStorage.setItem('live2d_hidden', '0');
+      this.elements.container.classList.remove("hidden");
+      localStorage.setItem("live2d_hidden", "0");
       this.showWelcome();
     }
   }
 
-  // ==================== 导出 ====================
   window.Live2DWidget = Live2DWidget;
-  
-  // 自动加载资源并初始化
-  loadAllResources().then(() => {
-    if (document.readyState === 'loading') {
-      window.addEventListener('DOMContentLoaded', () => {
+
+  loadAllResources()
+    .then(() => {
+      if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", () => {
+          window.live2d = new Live2DWidget();
+        });
+      } else {
         window.live2d = new Live2DWidget();
-      });
-    } else {
-      window.live2d = new Live2DWidget();
-    }
-  }).catch(err => {
-    console.error('[Live2D] 资源加载失败:', err);
-  });
+      }
+    })
+    .catch((err) => {
+      console.error("[Live2D] Resource load failed:", err);
+    });
 })();

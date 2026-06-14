@@ -1,0 +1,23 @@
+{
+  "welcome": "YouXiaoMiao is ready.",
+  "parameters": {
+    "Param85": 1
+  },
+  "hideDrawables": [
+    "ArtMesh84",
+    "ArtMesh85",
+    "ArtMesh86",
+    "ArtMesh184",
+    "ArtMesh185",
+    "ArtMesh186",
+    "ArtMesh186__ArtMesh187"
+  ],
+  "touchList": [
+    {
+      "text": "YouXiaoMiao says hello."
+    },
+    {
+      "text": "YouXiaoMiao is here."
+    }
+  ]
+}

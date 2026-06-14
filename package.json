@@ -4,6 +4,7 @@
   "description": "Live2D project with CDN refresh automation",
   "main": "index.js",
   "scripts": {
+    "generate-model-manifest": "node scripts/generate-model-manifest.js",
     "refresh-cdn": "node scripts/refresh-cdn.js"
   },
   "dependencies": {
