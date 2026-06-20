@@ -1,0 +1,4 @@
+interface:
+  display_name: "Live2D Add Model"
+  short_description: "Import and normalize new Live2D Cubism model folders."
+  default_prompt: "Use $live2d-add-model to import a new Live2D model folder into this repository."

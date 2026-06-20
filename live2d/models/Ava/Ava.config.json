@@ -1,0 +1,50 @@
+{
+  "welcome": "Ava is ready.",
+  "initMotion": {
+    "motion": "Tap左眼",
+    "from": {
+      "Part15": 1
+    },
+    "to": {
+      "Part15": 0
+    }
+  },
+  "hideParts": [
+    "Part5",
+    "neko",
+    "game",
+    "Part15",
+    "Part21",
+    "Part22",
+    "Part",
+    "Part16",
+    "Part12"
+  ],
+  "scaleWidth": 1.2,
+  "touchList": [
+    {
+      "text": "Ava action.",
+      "motion": "Tap右手"
+    },
+    {
+      "text": "Ava action.",
+      "motion": "Tap左眼",
+      "from": {
+        "Part15": 1
+      },
+      "to": {
+        "Part15": 0
+      }
+    },
+    {
+      "text": "Ava action.",
+      "motion": "Tap胸口项链",
+      "from": {
+        "Part12": 1
+      },
+      "to": {
+        "Part12": 0
+      }
+    }
+  ]
+}

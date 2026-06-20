@@ -1,0 +1,40 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Hackclaw.moc3",
+		"Textures": [
+			"Hackclaw.8192/texture_00.png"
+		],
+		"Physics": "Hackclaw.physics3.json",
+		"DisplayInfo": "Hackclaw.cdi3.json",
+		"Expressions": [
+			{ "Name": "expression1", "File": "expressions/expression1.exp3.json" },
+			{ "Name": "expression2", "File": "expressions/expression2.exp3.json" },
+			{ "Name": "expression3", "File": "expressions/expression3.exp3.json" },
+			{ "Name": "expression4", "File": "expressions/expression4.exp3.json" },
+			{ "Name": "expression5", "File": "expressions/expression5.exp3.json" },
+			{ "Name": "expression6", "File": "expressions/expression6.exp3.json" },
+			{ "Name": "expression7", "File": "expressions/expression7.exp3.json" },
+			{ "Name": "expression8", "File": "expressions/expression8.exp3.json" }
+		],
+		"Motions": {
+			"Idle": [{ "File": "motions/Hackclaw_idle.motion3.json" }]
+		}
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		}
+	],
+	"HitAreas": []
+}

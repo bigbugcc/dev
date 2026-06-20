@@ -1,0 +1,30 @@
+{
+  "welcome": "Diana is ready.",
+  "initMotion": "Tap抱阿草-左手",
+  "touchList": [
+    {
+      "text": "Diana action.",
+      "motion": "Tap生气 -领结"
+    },
+    {
+      "text": "Diana action.",
+      "motion": "Tap哭 -眼角"
+    },
+    {
+      "text": "Diana action.",
+      "motion": "Tap害羞-中间刘海"
+    },
+    {
+      "text": "Diana action.",
+      "motion": "Tap抱阿草-左手"
+    },
+    {
+      "text": "Diana action.",
+      "motion": "Tap摇头- 身体"
+    },
+    {
+      "text": "Diana action.",
+      "motion": "Leave"
+    }
+  ]
+}

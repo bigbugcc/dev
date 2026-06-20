@@ -1,0 +1,44 @@
+{
+  "models": [
+    {
+      "name": "Ava",
+      "model": "Ava/Ava.model3.json",
+      "config": "Ava/Ava.config.json"
+    },
+    {
+      "name": "Diana",
+      "model": "Diana/Diana.model3.json",
+      "config": "Diana/Diana.config.json"
+    },
+    {
+      "name": "GaiZi",
+      "model": "GaiZi/GaiZi.model3.json",
+      "config": "GaiZi/GaiZi.config.json"
+    },
+    {
+      "name": "Green",
+      "model": "Green/Green.model3.json",
+      "config": "Green/Green.config.json"
+    },
+    {
+      "name": "Hackclaw",
+      "model": "Hackclaw/Hackclaw.model3.json",
+      "config": "Hackclaw/Hackclaw.config.json"
+    },
+    {
+      "name": "HuDie",
+      "model": "HuDie/HuDie.model3.json",
+      "config": "HuDie/HuDie.config.json"
+    },
+    {
+      "name": "MiSide",
+      "model": "MiSide/MiSide.model3.json",
+      "config": "MiSide/MiSide.config.json"
+    },
+    {
+      "name": "YouXiaoMiao",
+      "model": "YouXiaoMiao/YouXiaoMiao.model3.json",
+      "config": "YouXiaoMiao/YouXiaoMiao.config.json"
+    }
+  ]
+}

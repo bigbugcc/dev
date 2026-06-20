@@ -1,0 +1,4 @@
+interface:
+  display_name: "Live2D Widget Maintainer"
+  short_description: "Maintain this static Live2D widget and model manifest."
+  default_prompt: "Use $live2d-widget-maintainer to update the Live2D widget runtime, model configs, or CDN workflow."

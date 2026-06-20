@@ -1,0 +1,10 @@
+{
+  "welcome": "Hackclaw is ready.",
+  "initMotion": "Idle",
+  "touchList": [
+    {
+      "text": "Hackclaw action.",
+      "motion": "Idle"
+    }
+  ]
+}
