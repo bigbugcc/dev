@@ -39,6 +39,8 @@
   const RESOURCES = {
     css: ["libs/live2d.css"],
     js: [
+      "libs/live2d-i18n.js",
+      "libs/live2d-context.js",
       "libs/live2dcubismcore.min.js",
       "libs/pixi.min.js",
       "libs/cubism4.min.js",
@@ -51,22 +53,17 @@
     hidden: true,
     tips: true,
     manifest: "models/manifest.json",
+    languageFile: "locales/interactions.json",
     model: "",
+    locale: "",
+    fallbackLocale: "en",
+    contextualTouchChance: 0.3,
     models: [],
-    messages: {
-      welcome: ["Hi!"],
-      skin: ["Want to switch models?", "The new model is ready."],
-      close: "See you next time.",
-      home: "Back to home.",
-    },
   };
 
   const DEFAULT_MODEL_CONFIG = {
-    welcome: "Hi!",
-    touchList: [
-      { text: "Hey there!" },
-      { text: "What's up?" },
-    ],
+    welcomeKey: "models.default.welcome",
+    touchList: [{ textKey: "models.default.touch" }],
   };
 
   function toUrl(path) {
@@ -127,6 +124,18 @@
         cssDataset.model ||
         globalConfig.model ||
         "",
+      locale:
+        query.get("live2dLang") ||
+        query.get("live2d-lang") ||
+        query.get("lang") ||
+        scriptDataset.lang ||
+        scriptDataset.locale ||
+        cssDataset.lang ||
+        cssDataset.locale ||
+        globalConfig.locale ||
+        document.documentElement.lang ||
+        navigator.language ||
+        "en",
     };
   }
 
@@ -145,16 +154,6 @@
       if (className) el.className = className;
       return el;
     },
-    getTimeGreeting: () => {
-      const hour = new Date().getHours();
-      if (hour > 22 || hour <= 5) return "It is late. Remember to rest.";
-      if (hour <= 8) return "Good morning!";
-      if (hour <= 11) return "Hope your morning is going well.";
-      if (hour <= 14) return "Lunch time is a good time to take a break.";
-      if (hour <= 17) return "Good afternoon!";
-      if (hour <= 19) return "Good evening!";
-      return "How was your day?";
-    },
     normalizeModelEntry: (entry) => {
       if (typeof entry === "string") {
         const parts = entry.split("/");
@@ -169,6 +168,15 @@
   class Live2DWidget {
     constructor(config = {}) {
       this.config = { ...CONFIG, ...readExternalConfig(), ...config };
+      this.config.locale = Live2DModules.normalizeLocale(this.config.locale);
+      const contextChance = Number(this.config.contextualTouchChance);
+      this.config.contextualTouchChance = Number.isFinite(contextChance)
+        ? Math.min(1, Math.max(0, contextChance))
+        : CONFIG.contextualTouchChance;
+      this.textManager = new Live2DModules.TextManager(
+        this.config.locale,
+        this.config.fallbackLocale
+      );
       this.currentModelIndex = 0;
       this.model = null;
       this.modelConfig = DEFAULT_MODEL_CONFIG;
@@ -178,7 +186,10 @@
       this.dialogTimer = null;
       this.elements = {};
 
-      this.init();
+      this.ready = this.init();
+      this.ready.catch((err) => {
+        console.error("[Live2D] Widget initialization failed:", err);
+      });
     }
 
     async init() {
@@ -187,7 +198,7 @@
         return;
       }
 
-      await this.loadModels();
+      await Promise.all([this.loadLanguageData(), this.loadModels()]);
       if (this.config.models.length === 0) {
         console.error("[Live2D] No models found.");
         return;
@@ -214,6 +225,15 @@
 
       const manifest = await fetchJSON(this.config.manifest);
       this.config.models = (manifest.models || []).map(Utils.normalizeModelEntry);
+    }
+
+    async loadLanguageData() {
+      try {
+        this.textManager.setData(await fetchJSON(this.config.languageFile));
+      } catch (err) {
+        this.textManager.setData(null);
+        console.warn("[Live2D] Interaction language file load failed:", this.config.languageFile, err);
+      }
     }
 
     selectInitialModel() {
@@ -287,10 +307,10 @@
 
     createUI() {
       const buttons = [
-        { name: "home", title: this.config.messages.home, click: () => (location.href = "/") },
-        { name: "skin", title: this.config.messages.skin[0], click: () => this.nextModel() },
-        { name: "info", title: "Live2D", click: () => {} },
-        { name: "close", title: this.config.messages.close, click: () => this.hide() },
+        { name: "home", textKey: "ui.home", click: () => (location.href = "/") },
+        { name: "skin", textKey: "ui.skinPrompt", click: () => this.nextModel() },
+        { name: "info", click: () => {} },
+        { name: "close", textKey: "ui.close", click: () => this.hide() },
       ];
 
       buttons.forEach((btn) => {
@@ -298,7 +318,7 @@
 
         const span = Utils.create("span", `pio-${btn.name}`);
         span.onclick = btn.click;
-        span.onmouseover = () => this.showMessage(btn.title);
+        if (btn.textKey) span.onmouseover = () => this.showMessageByKey(btn.textKey);
         this.elements.action.appendChild(span);
       });
     }
@@ -329,14 +349,13 @@
         this.setupModelInteraction(model, this.modelConfig);
 
         if (showSwitchMessage) {
-          this.showMessage(this.modelConfig.welcome || this.config.messages.skin[1]);
+          this.showModelWelcome(modelEntry.name, "ui.skinReady");
         }
       });
     }
 
     applyModelConfig(model, cfg) {
       this.elements.container.dataset.model = cfg.name;
-      this.config.messages.skin[1] = cfg.welcome || this.config.messages.skin[1];
 
       if (cfg.hideParts) {
         const coreModel = model.internalModel.coreModel;
@@ -368,13 +387,50 @@
     setupModelInteraction(model, cfg) {
       const touchList = cfg.touchList || DEFAULT_MODEL_CONFIG.touchList;
 
-      this.elements.canvas.onclick = () => {
+      this.elements.canvas.onclick = (event) => {
         const motionManager = model.internalModel.motionManager;
         if (motionManager.state.currentGroup && motionManager.state.currentGroup !== "Idle") return;
 
-        const action = Utils.rand(touchList);
+        const hitAreas = this.getHitAreas(event, model);
+        const action = this.selectTouchAction(touchList, hitAreas);
         this.playAction(action, model);
       };
+    }
+
+    getHitAreas(event, model = this.model) {
+      if (!event || !model || typeof model.hitTest !== "function") return [];
+
+      const rect = this.elements.canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return [];
+
+      const x = (event.clientX - rect.left) * (this.elements.canvas.width / rect.width);
+      const y = (event.clientY - rect.top) * (this.elements.canvas.height / rect.height);
+      return model.hitTest(x, y).sort((left, right) => {
+        const getAreaSize = (name) => {
+          const internal = model.internalModel;
+          const hitArea = internal && internal.hitAreas && internal.hitAreas[name];
+          if (!hitArea || typeof internal.getDrawableBounds !== "function") return Infinity;
+          const bounds = internal.getDrawableBounds(hitArea.index);
+          return bounds ? bounds.width * bounds.height : Infinity;
+        };
+        return getAreaSize(left) - getAreaSize(right);
+      });
+    }
+
+    selectTouchAction(touchList, hitAreas = []) {
+      if (!touchList || touchList.length === 0) return null;
+
+      for (const hitArea of hitAreas) {
+        const matched = touchList.filter((action) => {
+          if (!action || !action.hitArea) return false;
+          const targets = Array.isArray(action.hitArea) ? action.hitArea : [action.hitArea];
+          return targets.includes(hitArea);
+        });
+        if (matched.length > 0) return Utils.rand(matched);
+      }
+
+      const generic = touchList.filter((action) => action && !action.hitArea);
+      return generic.length > 0 ? Utils.rand(generic) : null;
     }
 
     playAction(action, model = this.model) {
@@ -385,7 +441,14 @@
         return;
       }
 
-      if (action.text) this.showMessage(action.text);
+      if (action.textKey) {
+        let shown = false;
+        if (Math.random() < this.config.contextualTouchChance) shown = this.showContextMessage("touch");
+        if (!shown) shown = this.showMessageByKey(action.textKey);
+        if (!shown) this.showContextMessage("touch");
+      } else if (action.text) {
+        this.showMessage(action.text);
+      }
       if (action.parameters) this.setParameters(action.parameters, model);
       if (action.motion) model.motion(action.motion);
 
@@ -442,21 +505,79 @@
       this.loadModel(this.config.models[this.currentModelIndex], true);
     }
 
+    getText(key) {
+      return this.textManager.getText(key);
+    }
+
+    pickMessage(value) {
+      return this.textManager.pick(value, Utils.rand);
+    }
+
+    getContextState(date = new Date()) {
+      return Live2DModules.Context.getState(date);
+    }
+
+    getContextPaths(kind) {
+      return Live2DModules.Context.getWeightedPaths(
+        kind,
+        (key) => this.getText(key),
+        Utils.rand
+      );
+    }
+
+    showContextMessage(kind) {
+      const paths = this.getContextPaths(kind);
+      while (paths.length > 0) {
+        const path = Utils.rand(paths);
+        if (this.showMessage(this.getText(path))) return true;
+        for (let i = paths.length - 1; i >= 0; i--) {
+          if (paths[i] === path) paths.splice(i, 1);
+        }
+      }
+      return false;
+    }
+
+    showMessageByKey(key) {
+      return this.showMessage(this.getText(key));
+    }
+
+    showMessageByKeys(keys) {
+      for (const key of keys) {
+        const value = this.getText(key);
+        if (value !== undefined && this.showMessage(value)) return true;
+      }
+      return false;
+    }
+
+    showModelWelcome(modelName, finalFallback = "ui.welcome") {
+      if (this.modelConfig.welcome && this.showMessage(this.modelConfig.welcome)) return true;
+      return this.showMessageByKeys([
+        this.modelConfig.welcomeKey,
+        modelName ? `models.${modelName}.welcome` : null,
+        "models.default.welcome",
+        finalFallback,
+      ]);
+    }
+
     showMessage(text) {
       const dialog = this.elements.dialog;
-      dialog.innerHTML = Array.isArray(text) ? Utils.rand(text) : text;
+      const message = this.pickMessage(text);
+      if (!message) return false;
+
+      dialog.textContent = message;
       dialog.classList.add("active");
+
+      this.textManager.remember(message);
 
       clearTimeout(this.dialogTimer);
       this.dialogTimer = setTimeout(() => dialog.classList.remove("active"), 3000);
+      return true;
     }
 
     showWelcome() {
-      if (this.config.tips) {
-        this.showMessage(Utils.getTimeGreeting());
-      } else {
-        this.showMessage(this.config.messages.welcome);
-      }
+      if (this.config.tips && this.showContextMessage("welcome")) return;
+      const current = this.config.models[this.currentModelIndex];
+      this.showModelWelcome(current && current.name);
     }
 
     hide() {

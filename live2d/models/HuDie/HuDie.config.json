@@ -1,11 +1,11 @@
 {
-  "welcome": "HuDie is ready.",
+  "welcomeKey": "models.HuDie.welcome",
   "touchList": [
     {
-      "text": "HuDie says hello."
+      "textKey": "models.HuDie.touch.hello"
     },
     {
-      "text": "HuDie is here."
+      "textKey": "models.HuDie.touch.here"
     }
   ]
 }

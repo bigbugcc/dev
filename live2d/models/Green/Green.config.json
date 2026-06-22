@@ -1,11 +1,11 @@
 {
-  "welcome": "Green is ready.",
+  "welcomeKey": "models.Green.welcome",
   "touchList": [
     {
-      "text": "Green says hello."
+      "textKey": "models.Green.touch.hello"
     },
     {
-      "text": "Green is here."
+      "textKey": "models.Green.touch.here"
     }
   ]
 }

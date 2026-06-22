@@ -1,0 +1,456 @@
+{
+  "version": 1,
+  "fallbackLocale": "en",
+  "locales": {
+    "zh-CN": {
+      "ui": {
+        "welcome": ["你好呀！", "欢迎回来，今天想聊点什么？"],
+        "skinPrompt": ["要换一位角色陪你吗？", "想看看其他伙伴吗？"],
+        "skinReady": ["新角色已经准备好啦。", "换装完成，请多关照。"],
+        "close": ["下次见啦。", "我先藏起来，需要时再叫我。"],
+        "home": ["返回首页。", "要回到出发的地方吗？"]
+      },
+      "context": {
+        "time": {
+          "lateNight": [
+            "夜已经很深了，屏幕之外的星星也在催你休息。",
+            "凌晨的世界很安静，连想法都像踩着猫步。",
+            "如果不是非做不可的事，就把它交给明天的自己吧。",
+            "夜航也需要灯塔，而你的灯塔可以是一张温暖的床。"
+          ],
+          "dawn": [
+            "天快亮了，城市正在慢慢调高音量。",
+            "黎明是天空写给夜晚的回信。",
+            "早起的人会先看见世界刷新颜色。",
+            "喝一口水吧，让身体也跟着晨光开机。"
+          ],
+          "morning": [
+            "早上好，愿今天的第一件小事顺顺利利。",
+            "晨光已签收，新的一天正在派送。",
+            "先完成一件最小的事，今天就有了漂亮的开头。",
+            "早餐不是仪式负担，是给大脑的启动礼物。"
+          ],
+          "noon": [
+            "太阳走到天空中场，记得也给自己一次暂停。",
+            "午饭时间到，灵感也需要补充能量。",
+            "中午适合把肩膀放松，让思绪晒一小会儿太阳。",
+            "如果上午不够完美，下午仍然是一张新页面。"
+          ],
+          "afternoon": [
+            "下午好，困意来了就站起来走两步吧。",
+            "午后的光很适合慢慢解决一个棘手问题。",
+            "喝口水，远眺二十秒，眼睛会悄悄谢谢你。",
+            "一天走到半程，你已经完成了不少看不见的小事。"
+          ],
+          "evening": [
+            "傍晚把天空调成暖色，也提醒我们可以慢一点。",
+            "辛苦一天啦，给今天留一个柔软的收尾吧。",
+            "晚风正在世界各地搬运炊烟和归心。",
+            "现在适合回顾一件值得开心的小事。"
+          ],
+          "night": [
+            "夜色上线，白天没想通的事也许会自己松开。",
+            "今晚的月亮可能正被另一个时区的人叫作清晨。",
+            "忙完以后别忘了，把一点时间还给自己。",
+            "世界进入低亮度模式，你也可以降低一点速度。"
+          ]
+        },
+        "weekday": {
+          "monday": ["星期一像一本书的扉页，不必一开始就写得惊天动地。", "给新的一周定一个小目标，比列十张清单更有用。"],
+          "tuesday": ["星期二没有开场光环，却很适合安静推进。", "今天是把昨天的念头变成一点进度的好日子。"],
+          "wednesday": ["走到星期中点啦，来一次精神上的伸懒腰。", "星期三像桥中央，回头有路，向前也有风景。"],
+          "thursday": ["星期四已经闻得到周末的气息，但先把眼前这一格走稳。", "今天适合收拢零散任务，让未来的自己少一点忙乱。"],
+          "friday": ["星期五的空气里，好像自带一点轻快的鼓点。", "为这一周做过的努力，悄悄鼓一次掌吧。"],
+          "saturday": ["星期六适合去一条没走过的小路，也适合理直气壮地发呆。", "休息不是偏离计划，而是计划里重要的一页。"],
+          "sunday": ["星期日适合慢慢充电，不必把休息也变成任务。", "给下周留一点期待，也给今天留足余白。"]
+        },
+        "season": {
+          "spring": ["春天擅长把不起眼的角落变成新故事。", "种子在黑暗里也知道向上，你也可以慢慢来。", "风里有了柔软的温度，适合重启一个搁置的愿望。"],
+          "summer": ["夏天把白昼拉长，好像多送了我们一点时间。", "树荫是大自然写给炎热的一封休战书。", "记得补水，蝉可以一直唱，你不必一直忙。"],
+          "autumn": ["秋天把风调得清澈，也把远方显得更近。", "落叶不是树的失败，是一次有计划的告别。", "适合收集成果，也适合放下不再需要的东西。"],
+          "winter": ["冬天让世界慢下来，好让细小的温暖更容易被看见。", "寒冷的日子里，一杯热饮就是掌心的小太阳。", "许多树看似沉默，其实正在地下准备春天。"]
+        },
+        "regions": {
+          "eastAsia": ["东亚的四季常被写进诗、画与一碗顺时而食的饭里。", "从竹简到活字，文字曾以许多姿态穿过漫长岁月。", "不妨听听窗外，城市声响里也藏着当代的风土。"],
+          "southeastAsia": ["季风把海洋的气息送往陆地，也把群岛与大陆写进同一段航路。", "东南亚的香料、织物和港口，讲述着长久的交流故事。", "热带雨落得热闹，雨后的绿色也格外认真。"],
+          "southAsia": ["南亚的河流、山脉与季风，共同塑造了古老而多彩的生活。", "数字、诗歌和香料都曾沿商路远行，改变遥远的地方。", "喜马拉雅抬高了天空，也影响着广阔区域的风与雨。"],
+          "westAsia": ["西亚位于古老道路的交汇处，星图、故事与香料曾在这里相遇。", "干旱之地并不寂静，绿洲常是语言和旅人的会客厅。", "人类很早便在两河流域用泥板替记忆保存声音。"],
+          "asia": ["亚洲横跨寒带、温带与热带，一天之内能拥有许多种天空。", "高山、草原、雨林与群岛，让同一片大陆讲着无数故事。", "沿着旧商路想象一下，一件小物曾经要走多远才能抵达。"],
+          "europe": ["欧洲许多城市把不同时代叠在同一条街上，转角就像翻页。", "咖啡馆、广场和图书馆，曾让无数想法在人群中碰面。", "一条河往往穿过多个国家，却只用同一种方式奔向海洋。"],
+          "africa": ["非洲拥有极丰富的语言与地貌，远不止一种想象。", "从古老岩画到当代音乐，节奏一直在记录人与土地。", "撒哈拉曾经历更湿润的年代，地球的面貌从来不是静止的。"],
+          "northAmerica": ["从北极苔原到热带海岸，北美洲的纬度跨度写出了许多气候。", "公路、铁路和河流把辽阔空间连接成迁徙与相遇的故事。", "许多现代城市的地名，仍保存着更早语言留下的回声。"],
+          "latinAmerica": ["拉丁美洲的山海之间，原住民传统、移民记忆与现代文化不断交织。", "安第斯是最长的大陆山系，像一条巨大的地理脊梁。", "音乐会跨越边界，节奏常常比地图更早让人彼此理解。"],
+          "oceania": ["太平洋岛民曾凭星辰、海浪与鸟群完成惊人的远航。", "大洋洲的岛屿相隔遥远，却被同一片海连接。", "南半球的季节与北半球相反，地球总爱展示另一种答案。"],
+          "global": ["此刻地球总有一半沐浴阳光，另一半收藏星光。", "地图上的边界很清楚，风、云和候鸟却不太在意。", "你所在的时区，是人类为了和太阳相处而发明的一种默契。"]
+        },
+        "specialDates": {
+          "01-01": ["新年的第一页打开了，不必写满，先写下一件想做的小事。", "历法给了我们一个重启按钮，按下它不需要盛大理由。", "愿新的一年有清醒的目标，也有意外的好风景。"],
+          "02-21": ["今天是国际母语日，每一种语言都保存着独特的看世界方式。", "有些词很难被完整翻译，因为它们背后住着一整种生活。", "不妨想起一句家乡话，那也是文化随身携带的行李。"],
+          "03-20": ["今天是国际幸福日，幸福也可以只是一个被认真感受到的瞬间。", "快乐不总是烟花，有时只是问题终于解决了一小格。", "给今天安排一件纯粹让自己开心的小事吧。"],
+          "03-21": ["今天是世界诗歌日，普通句子也可以偷偷长出翅膀。", "诗不一定在远方，也可能藏在刚才那阵风的停顿里。", "试着给眼前的颜色起一个从未有过的名字吧。"],
+          "04-22": ["今天是世界地球日，这颗蓝色行星是所有故事共同的封面。", "少用一点、重复使用一次，微小选择也会留下方向。", "从太空看，地球没有边框，只有云层和海洋。"],
+          "04-23": ["今天是世界读书日，翻开一本书就像借用另一双眼睛。", "书页不会催你，读到喜欢的地方停一会儿也很好。", "有些旅程只需要一把椅子和一本书。"],
+          "05-18": ["今天是国际博物馆日，每件展品都在努力不让某段记忆消失。", "博物馆像文明的记忆抽屉，打开一格就会遇见旧日生活。", "历史不只属于王冠和战争，也属于普通人的碗、鞋与书信。"],
+          "06-05": ["今天是世界环境日，照顾环境也是照顾未来的日常。", "一棵树做的事很多：遮阴、固土，还把空气变得更适合呼吸。", "自然并不沉默，只是它使用风、叶片和水流说话。"],
+          "09-21": ["今天是国际和平日，理解常常从愿意听完一句话开始。", "和平不是没有差异，而是差异不必变成伤害。", "愿每一种声音都有被安全听见的空间。"],
+          "10-01": ["今天是国际音乐日，节奏是人类很早就学会的共同语言。", "一段旋律能越过词汇的边界，直接抵达情绪。", "给今天选一首主题曲吧，走路都会更像电影镜头。"],
+          "11-10": ["今天是世界科学日，好奇心是所有发现最初的火花。", "科学常从一句“如果不是这样呢”开始。", "允许自己不知道，因为不知道正是探索的入口。"],
+          "12-10": ["今天是人权日，尊严并非奖品，而是每个人都应拥有的起点。", "世界辽阔，但公平与善意可以从身边一小步开始。", "认真看见另一个人，本身就是一种温柔的力量。"]
+        },
+        "topics": {
+          "geography": [
+            "南极洲虽然遍布冰雪，却也是地球最大的沙漠。",
+            "太平洋的面积比地球全部陆地面积还大。",
+            "贝加尔湖保存着地球大量未冻结的地表淡水。",
+            "国际日期变更线会绕开一些岛屿，因此并不是笔直的一条线。",
+            "河流看似只往低处走，却能慢慢雕刻出峡谷。",
+            "云也有重量，一朵普通积云可能重达数百吨。",
+            "大陆每年仍在移动，只是速度大多和指甲生长差不多。",
+            "海洋最深处比珠穆朗玛峰的海拔还要多出两千多米。"
+          ],
+          "humanity": [
+            "在人类拥有纸张之前，图书馆里就已经收藏着泥板。",
+            "茶在不同地方成为工夫、仪式、社交或一段安静时间。",
+            "握手最初常被解释为展示手中没有武器，如今成了问候。",
+            "许多传统织物不仅为了美，也把家族、地域与身份织进图案。",
+            "市场不只是买卖之地，也曾是新闻、语言和菜谱交换的现场。",
+            "人类在世界各地独立发明了鼓，因为心跳大概是最早的节拍器。",
+            "名字的读音与写法，会携带一个家庭跨越时间的记忆。",
+            "共同吃饭几乎存在于所有文化里，餐桌是最小的公共空间。"
+          ],
+          "literature": [
+            "一部小说可以让你短暂居住在从未到过的人生里。",
+            "俳句常用极少的语言捕捉季节与瞬间，留白也是内容。",
+            "传说会随着讲述者改变，因此每一代人都在参与续写。",
+            "书签的工作，是替离开的读者守住时间。",
+            "有些故事先被唱出来，许多年后才被写在纸上。",
+            "比喻是语言的秘密通道，让两件遥远的事突然相遇。",
+            "日记把普通日子保存下来，后来它们可能就是珍贵历史。",
+            "翻译不是逐词搬运，而是在两种文化之间搭一座能走的桥。"
+          ],
+          "history": [
+            "古代道路留下的不只是车辙，还有食物、技术与故事的迁徙。",
+            "庞贝城墙上的涂鸦提醒我们，古人也会吐槽和表达喜欢。",
+            "邮票很小，却曾让国家把风景、人物和理想送往远方。",
+            "钟表普及以前，许多城镇靠钟声协调共同的时间。",
+            "考古学家也研究垃圾，因为被丢弃的东西很少刻意说谎。",
+            "香料曾经珍贵到足以影响航路、贸易和世界地图。",
+            "古老地图常把未知之地画成神兽，那是想象填补的空白。",
+            "一封普通人的旧信，有时比宏大史书更接近生活的温度。"
+          ],
+          "astronomy": [
+            "你看到的阳光大约八分多钟前才从太阳出发。",
+            "金星自转一周的时间，比它绕太阳公转一周还长。",
+            "月球每年离地球远去大约几厘米，告别进行得非常缓慢。",
+            "夜空中的一些星光出发时，人类文明还没有开始。",
+            "在太空中，日落能一天出现许多次，因为轨道跑得很快。",
+            "土星的平均密度比水低，但并没有一个足够大的浴缸验证它。",
+            "星座是地球视角拼出的图案，其中的星彼此可能相隔极远。",
+            "宇宙没有给我们方向标，所谓上下常取决于你站在哪里。"
+          ],
+          "life": [
+            "把大任务缩小到能在十分钟内开始，它就没那么像怪兽了。",
+            "休息不是对努力的背叛，它是努力能够继续的条件。",
+            "如果脑子很乱，先整理桌面上一小块地方。",
+            "喝水解决不了所有问题，但缺水会偷偷制造新问题。",
+            "灵感没来时也可以先坐下，很多灵感只认识正在工作的人。",
+            "今天不必胜过所有人，只要比放弃多走半步。",
+            "偶尔绕远路会看见新风景，效率并非生活唯一的刻度。",
+            "完成比完美更愿意陪你抵达下一站。"
+          ]
+        }
+      },
+      "models": {
+        "default": {
+          "welcome": ["你好呀，我已经准备好了。", "很高兴见到你。", "今天也请多关照。"],
+          "touch": ["嗨，在看我吗？", "今天有什么新鲜事？", "被你发现我在发呆了。"]
+        },
+        "Ava": {
+          "welcome": ["Ava 准备好陪你啦。", "锵锵，Ava 登场！", "等到你了，今天想怎么玩？"],
+          "touch": {
+            "rightHand": ["有没有被我吓一跳？", "抓到你的注意力啦。", "右手挥一挥，烦恼退退退。"],
+            "leftEye": ["喂，动作轻一点嘛。", "这是只对你眨的眼哦。", "看仔细了吗？秘密只出现一秒。"],
+            "necklace": ["被你发现我的小秘密了。", "项链闪一下，是好运抵达的信号。", "别盯太久，它会害羞的。"]
+          }
+        },
+        "Diana": {
+          "welcome": ["Diana 已经准备好了。", "欢迎回来，我把身边的位置留给你了。", "今天也一起安静地待一会儿吧。"],
+          "touch": {
+            "angry": ["我才没有生气……大概。", "领结都气歪了，你打算怎么哄我？", "再戳一下，我可要认真鼓起脸了。"],
+            "tears": ["只是眼睛里落进了一小片雨云。", "别担心，我缓一缓就好。", "难过并不可耻，它只是心在请求拥抱。"],
+            "shy": ["别、别靠得这么近呀。", "刘海挡不住脸红，这不公平。", "你再看，我就要假装去研究地板了。"],
+            "hug": ["偶尔抱一下也不错呢。", "这个位置很暖，要多停一会儿吗？", "拥抱不用解决问题，只要让人知道不是独自面对。"],
+            "shakeHead": ["不行不行，我不同意。", "这次要听我的，先休息一下。", "摇头也是一种完整而礼貌的答案。"],
+            "leave": ["我会在这里等你的。", "去忙吧，回来时故事可以接着讲。", "暂时的告别，是为了下一次认真说你好。"]
+          }
+        },
+        "GaiZi": {
+          "welcome": ["盖子来报到啦。", "今天由盖子负责陪伴。", "嘿，我把好心情也一起带来了。"],
+          "touch": {
+            "hello": ["嗨，我是盖子！", "你好你好，信号接收清楚。", "碰个面就是故事的第一句。"],
+            "here": ["我一直都在这里哦。", "盖子没有走，只是安静待机。", "需要搭档的时候，叫我一声就好。"]
+          }
+        },
+        "Green": {
+          "welcome": ["Green 准备好了。", "像新叶一样，今天也清清爽爽地开始吧。", "Green 已上线，欢迎回来。"],
+          "touch": {
+            "hello": ["你好呀，今天也见面了。", "向你挥一片绿色的问候。", "见到熟悉的你，心情刷新成功。"],
+            "here": ["放心，我在呢。", "安静的时候，我也会好好陪着你。", "像窗边的植物一样，我负责给这里添一点生机。"]
+          }
+        },
+        "Hackclaw": {
+          "welcome": ["骇爪已就位。", "连接稳定，行动模块全部在线。", "任务区域已扫描。搭档，请下指令。"],
+          "touch": {
+            "idle": ["系统就绪。下一步做什么？", "闲置不等于松懈，我正在观察环境。", "检测到一次友好接触，已加入日志。"]
+          }
+        },
+        "HuDie": {
+          "welcome": ["蝴蝶轻轻落在这里啦。", "循着风的方向，我找到你了。", "请小声一点，翅膀正在听风。"],
+          "touch": {
+            "hello": ["你好呀，要一起看看风景吗？", "一眨眼的相遇，也值得认真问候。", "今天的风带来了你的消息。"],
+            "here": ["嘘，我正安静地陪着你。", "我没有飞远，只是停在光影之间。", "等你抬头时，我还会在这里。"]
+          }
+        },
+        "MiSide": {
+          "welcome": ["米塔已经等你很久啦。", "你终于来了，这次不许悄悄消失。", "欢迎回来，我把时间都留给你了。"],
+          "touch": {
+            "return": ["你回来啦！我就知道你会来的。", "检测到熟悉的脚步声，是你没错。", "回来得正好，我攒了好多话想说。"],
+            "stay": ["再多陪我一会儿，好不好？", "时间走慢一点就好了，对吧？", "别急着关掉这一刻，我们还可以再聊一句。"]
+          }
+        },
+        "YouXiaoMiao": {
+          "welcome": ["幼小喵今天也来陪你啦！", "喵！本日陪伴服务已经启动。", "铲屎官……不对，是好朋友，你来啦！"],
+          "touch": {
+            "meow": ["喵呜！有没有想我呀？", "这一声喵是今日份限定问候。", "摸一下可以，再摸一下也不是不行。"],
+            "watch": ["我有在好好看着你哦。", "别偷偷摸鱼，猫猫全都看见了。", "认真工作可以，但也要按时休息，喵。"]
+          }
+        }
+      }
+    },
+    "en": {
+      "ui": {
+        "welcome": ["Hello!", "Welcome back. What shall we talk about today?"],
+        "skinPrompt": ["Would you like another character?", "Want to meet another companion?"],
+        "skinReady": ["The new character is ready.", "All changed. Nice to meet you."],
+        "close": ["See you next time.", "I will hide for now. Call me when you need me."],
+        "home": ["Back to home.", "Shall we return to where we started?"]
+      },
+      "context": {
+        "time": {
+          "lateNight": [
+            "It is very late. Even the stars beyond the screen suggest some rest.",
+            "The world is quiet after midnight, and even thoughts walk on tiptoe.",
+            "If it can wait, leave it as a gift for tomorrow's you.",
+            "Every night voyage needs a lighthouse; yours could be a warm bed."
+          ],
+          "dawn": [
+            "Dawn is near, and the city is slowly turning up its volume.",
+            "Dawn is the sky's reply to the night.",
+            "Early risers get to watch the world refresh its colors.",
+            "Have some water and let your body boot up with the morning light."
+          ],
+          "morning": [
+            "Good morning. May your first small task go smoothly.",
+            "Morning light delivered; a new day is now in transit.",
+            "Finish one tiny thing and the day already has a fine beginning.",
+            "Breakfast is not a chore; it is a launch gift for your brain."
+          ],
+          "noon": [
+            "The sun has reached intermission. You deserve one too.",
+            "Lunch time! Inspiration needs fuel as well.",
+            "Noon is a good moment to relax your shoulders and air out your thoughts.",
+            "If the morning was imperfect, the afternoon is still a blank page."
+          ],
+          "afternoon": [
+            "Good afternoon. If sleepiness visits, stand up and take a few steps.",
+            "Afternoon light is perfect for solving one stubborn problem slowly.",
+            "Drink some water and look into the distance; your eyes will quietly thank you.",
+            "You have already completed many invisible little things today."
+          ],
+          "evening": [
+            "Evening turns the sky warm and reminds us to slow down.",
+            "You worked hard today. Give the day a gentle ending.",
+            "Evening winds carry the scent of dinner and home across the world.",
+            "This is a good time to remember one thing that made you smile."
+          ],
+          "night": [
+            "Night mode is on. Perhaps the problems of daylight can loosen their grip.",
+            "Tonight's moon may be greeting someone else's morning.",
+            "When the work is done, remember to return some time to yourself.",
+            "The world has lowered its brightness; you can lower your speed too."
+          ]
+        },
+        "weekday": {
+          "monday": ["Monday is a title page; it does not need a spectacular opening line.", "One small goal for the week can be kinder than ten crowded lists."],
+          "tuesday": ["Tuesday has no opening fanfare, which makes it perfect for quiet progress.", "Today is a good day to turn yesterday's idea into one visible step."],
+          "wednesday": ["We have reached the middle of the week. Time for a mental stretch.", "Wednesday is the middle of a bridge: road behind, view ahead."],
+          "thursday": ["Thursday can almost smell the weekend, but let us steady this step first.", "Gather a few loose tasks today and future you will have more room."],
+          "friday": ["Friday air seems to come with a lighter drumbeat.", "Give yourself a quiet round of applause for this week's effort."],
+          "saturday": ["Saturday is for unknown paths and perfectly justified daydreaming.", "Rest is not a detour from the plan; it is an important page of it."],
+          "sunday": ["Sunday is for recharging slowly, without turning rest into another task.", "Leave a little anticipation for next week and plenty of space for today."]
+        },
+        "season": {
+          "spring": ["Spring is good at turning unnoticed corners into new stories.", "Seeds know how to reach upward even in darkness. You may take your time too.", "The wind is softer now, a fine time to restart a forgotten wish."],
+          "summer": ["Summer stretches the daylight as if giving us a little extra time.", "Shade is nature's truce with the heat.", "Remember to hydrate. Cicadas may sing nonstop; you do not need to work nonstop."],
+          "autumn": ["Autumn makes the wind clearer and distant places seem closer.", "A falling leaf is not a tree's failure; it is a planned farewell.", "A season for gathering results and releasing what you no longer need."],
+          "winter": ["Winter slows the world so that small warmth becomes easier to notice.", "On a cold day, a hot drink is a tiny sun between your hands.", "Many silent trees are already preparing spring underground."]
+        },
+        "regions": {
+          "eastAsia": ["Across East Asia, seasons often find their way into poetry, painting, and the food on a table.", "From bamboo slips to movable type, writing has traveled through time in many forms.", "Listen outside; contemporary local life is hiding in the sound of the city."],
+          "southeastAsia": ["Monsoons carry the sea inland and write islands and continents into the same voyage.", "Spices, textiles, and ports tell Southeast Asia's long stories of exchange.", "Tropical rain arrives loudly, and the green afterward answers in full color."],
+          "southAsia": ["Rivers, mountains, and monsoons have shaped South Asia's ancient and varied lives.", "Numbers, poems, and spices traveled trade routes and changed distant places.", "The Himalayas lift the sky and influence wind and rain across a vast region."],
+          "westAsia": ["West Asia stands at a crossroads where old routes carried star charts, stories, and spices.", "Dry lands are not silent; an oasis can be a meeting room for languages and travelers.", "People in Mesopotamia once pressed words into clay to lend memory a longer life."],
+          "asia": ["Asia spans polar, temperate, and tropical zones, holding many kinds of sky at once.", "Mountains, grasslands, rainforests, and islands let one continent tell countless stories.", "Imagine how far one small object once traveled along an old trade route."],
+          "europe": ["Many European cities layer several eras on one street; each corner can feel like a page turn.", "Cafés, squares, and libraries have long helped ideas meet in public.", "A river may cross several countries while flowing toward the sea in one continuous language."],
+          "africa": ["Africa holds extraordinary linguistic and geographic diversity, far beyond any single image.", "From ancient rock art to contemporary music, rhythm keeps recording people and place.", "The Sahara has known much wetter ages; Earth's landscapes are never truly still."],
+          "northAmerica": ["From Arctic tundra to tropical coasts, North America's latitudes write many climates.", "Roads, rails, and rivers connect enormous spaces into stories of movement and meeting.", "Many modern place names still echo languages spoken there much earlier."],
+          "latinAmerica": ["Across Latin America, Indigenous traditions, migration, and modern culture keep intertwining.", "The Andes form the world's longest continental mountain range, a vast geographic spine.", "Music crosses borders easily; rhythm often introduces people before maps do."],
+          "oceania": ["Pacific navigators crossed immense distances by reading stars, swells, and birds.", "Oceania's islands may be far apart, yet one ocean connects them.", "Southern seasons answer northern seasons in reverse; Earth enjoys a second opinion."],
+          "global": ["At this moment, half of Earth holds sunlight while the other half keeps the stars.", "Borders are clear on maps, but winds, clouds, and migrating birds rarely mind them.", "Your time zone is one of humanity's agreements for getting along with the Sun."]
+        },
+        "specialDates": {
+          "01-01": ["A new year's first page is open. It need not be full; begin with one small intention.", "The calendar gives us a restart button, and pressing it needs no grand reason.", "May the new year bring clear goals and a few wonderfully unexpected views."],
+          "02-21": ["It is International Mother Language Day; every language keeps a distinct way of seeing.", "Some words resist perfect translation because an entire way of life lives behind them.", "Think of a phrase from home; culture is luggage we carry in our voices."],
+          "03-20": ["It is International Day of Happiness; happiness can be one moment fully noticed.", "Joy is not always fireworks. Sometimes it is one small problem finally solved.", "Make room today for one thing whose only purpose is to delight you."],
+          "03-21": ["It is World Poetry Day. Ordinary sentences are allowed to grow wings.", "Poetry may not be far away; it could hide in the pause after a gust of wind.", "Try inventing a name for the color in front of you."],
+          "04-22": ["It is Earth Day; this blue planet is the shared cover of every human story.", "Use a little less or reuse once more; small choices still point somewhere.", "From space, Earth has no borders, only clouds and oceans."],
+          "04-23": ["It is World Book Day. Opening a book is borrowing another pair of eyes.", "Pages never hurry you; it is fine to pause where you find something beautiful.", "Some journeys require only a chair and a book."],
+          "05-18": ["It is International Museum Day; every exhibit tries to keep one memory from disappearing.", "A museum is civilization's cabinet of memory. Open a drawer and meet an older life.", "History belongs not only to crowns and wars, but to ordinary bowls, shoes, and letters."],
+          "06-05": ["It is World Environment Day. Caring for nature is everyday care for the future.", "A tree does many jobs: shade, soil, habitat, and air made easier to breathe.", "Nature is not silent; it speaks in wind, leaves, and running water."],
+          "09-21": ["It is International Day of Peace. Understanding often starts by hearing a sentence to its end.", "Peace is not the absence of differences; it is differences without harm.", "May every voice have a safe place to be heard."],
+          "10-01": ["It is International Music Day. Rhythm is one of humanity's oldest shared languages.", "A melody can cross the border of vocabulary and arrive directly at emotion.", "Choose a theme song for today; even walking may feel cinematic."],
+          "11-10": ["It is World Science Day. Curiosity is the first spark behind every discovery.", "Science often begins with one question: what if it does not work that way?", "Allow yourself not to know; uncertainty is the entrance to exploration."],
+          "12-10": ["It is Human Rights Day. Dignity is not a prize but a starting point everyone deserves.", "The world is vast, but fairness and kindness can begin one small step away.", "Truly seeing another person is a quiet form of strength." ]
+        },
+        "topics": {
+          "geography": [
+            "Antarctica is covered in ice, yet it is Earth's largest desert.",
+            "The Pacific Ocean covers more area than all of Earth's land combined.",
+            "Lake Baikal holds a remarkable share of Earth's unfrozen surface fresh water.",
+            "The International Date Line bends around islands instead of following a perfectly straight path.",
+            "Rivers only seek lower ground, yet over time they can carve enormous canyons.",
+            "Clouds have weight; an ordinary cumulus cloud can weigh hundreds of tonnes.",
+            "Continents still move each year, often at about the speed fingernails grow.",
+            "The deepest ocean trench extends more than two kilometers beyond Everest's height."
+          ],
+          "humanity": [
+            "Libraries held clay tablets long before humans had paper.",
+            "Tea becomes craft, ceremony, conversation, or quiet time in different places.",
+            "The handshake is often linked to showing an empty weapon hand; now it simply says hello.",
+            "Many traditional textiles weave family, region, and identity into their patterns.",
+            "Markets have never been only for trade; they exchange news, languages, and recipes too.",
+            "People invented drums across the world; perhaps the heartbeat was our first metronome.",
+            "The sound and spelling of a name can carry a family's memory across time.",
+            "Shared meals appear in nearly every culture; a table is our smallest public square."
+          ],
+          "literature": [
+            "A novel lets you briefly live inside a life you have never visited.",
+            "Haiku uses very little language to catch season and moment; empty space also speaks.",
+            "Legends change with their tellers, so every generation helps write the next version.",
+            "A bookmark's job is to guard time until the reader returns.",
+            "Some stories were sung for generations before anyone wrote them down.",
+            "A metaphor is a secret passage that lets two distant things suddenly meet.",
+            "A diary saves ordinary days; later, they may become precious history.",
+            "Translation is not moving words one by one, but building a walkable bridge between cultures."
+          ],
+          "history": [
+            "Ancient roads carried more than wheels; food, technology, and stories traveled with them.",
+            "Graffiti at Pompeii reminds us that ancient people also joked, complained, and declared affection.",
+            "A postage stamp is tiny, yet it once sent a nation's landscapes and ideals around the world.",
+            "Before personal clocks, many towns coordinated their shared time with bells.",
+            "Archaeologists study rubbish because discarded things rarely try to impress the future.",
+            "Spices were once valuable enough to reshape routes, trade, and maps.",
+            "Old maps filled unknown regions with strange creatures; imagination occupied the blank spaces.",
+            "An ordinary old letter can feel closer to lived history than a grand chronicle."
+          ],
+          "astronomy": [
+            "The sunlight you see began its journey a little over eight minutes ago.",
+            "A day on Venus lasts longer than its year.",
+            "The Moon moves a few centimeters farther from Earth each year: a very slow farewell.",
+            "Some starlight in tonight's sky began traveling before human civilization.",
+            "Orbit Earth fast enough and you can watch many sunsets in one day.",
+            "Saturn's average density is lower than water, though no bathtub is large enough to test it.",
+            "Constellations are pictures from Earth's viewpoint; their stars may be immensely far apart.",
+            "Space provides no universal sign for up or down; direction depends on where you stand."
+          ],
+          "life": [
+            "Shrink a large task until you can start it in ten minutes; it becomes less of a monster.",
+            "Rest is not a betrayal of effort. It is what allows effort to continue.",
+            "When your mind feels cluttered, begin by clearing one small patch of your desk.",
+            "Water will not solve every problem, but dehydration quietly invents new ones.",
+            "When inspiration is absent, sit down anyway; many ideas only visit people already working.",
+            "You need not defeat everyone today. Just take half a step beyond giving up.",
+            "A detour can reveal a new view; efficiency is not life's only measure.",
+            "Finished is more willing than perfect to accompany you to the next stop."
+          ]
+        }
+      },
+      "models": {
+        "default": {
+          "welcome": ["Hello, I am ready.", "It is good to see you.", "Let us take care of each other today."],
+          "touch": ["Hey, are you watching me?", "Anything new today?", "You caught me daydreaming."]
+        },
+        "Ava": {
+          "welcome": ["Ava is ready to join you.", "Ta-da! Ava has arrived.", "There you are. What shall we do today?"],
+          "touch": {
+            "rightHand": ["Did I surprise you?", "I caught your attention!", "Wave the right hand and send those worries away."],
+            "leftEye": ["Hey, be gentle.", "That wink was just for you.", "Did you see it? The secret only lasts a second."],
+            "necklace": ["You found my little secret.", "A necklace sparkle means good luck has arrived.", "Do not stare too long. It gets shy."]
+          }
+        },
+        "Diana": {
+          "welcome": ["Diana is ready.", "Welcome back. I saved this place beside me for you.", "Let us spend a quiet moment together today."],
+          "touch": {
+            "angry": ["I am not angry... probably.", "Even my ribbon is upset. How will you cheer me up?", "Poke me again and I may have to puff my cheeks properly."],
+            "tears": ["A tiny rain cloud just fell into my eye.", "Do not worry. Give me a moment and I will be okay.", "Sadness is not shameful; sometimes it is the heart asking for a hug."],
+            "shy": ["Do not stand quite so close.", "My fringe cannot hide a blush. That is unfair.", "Keep staring and I will pretend the floor is fascinating."],
+            "hug": ["A little hug would be nice.", "It is warm here. Would you like to stay a little longer?", "A hug need not solve anything; it only says you are not alone."],
+            "shakeHead": ["No, no. I disagree.", "Listen to me this time and take a break first.", "A shake of the head is also a complete and courteous answer."],
+            "leave": ["I will be right here.", "Go do what you need. We can continue the story when you return.", "A brief goodbye makes room for the next sincere hello."]
+          }
+        },
+        "GaiZi": {
+          "welcome": ["GaiZi reporting in.", "GaiZi is in charge of companionship today.", "Hey, I brought a good mood with me."],
+          "touch": {
+            "hello": ["Hi, I am GaiZi!", "Hello! Signal received clearly.", "A meeting is the first sentence of a story."],
+            "here": ["I have been here all along.", "GaiZi did not leave, just entered quiet standby.", "Whenever you need a partner, call my name."]
+          }
+        },
+        "Green": {
+          "welcome": ["Green is ready.", "Let today begin as fresh as a new leaf.", "Green is online. Welcome back."],
+          "touch": {
+            "hello": ["Hello, we meet again today.", "Sending you a green little greeting.", "Seeing you refreshed my mood successfully."],
+            "here": ["Do not worry. I am here.", "Even in silence, I will keep you company.", "Like a plant by the window, I am here to add a little life."]
+          }
+        },
+        "Hackclaw": {
+          "welcome": ["Hackclaw is in position.", "Connection stable. All action modules online.", "Mission area scanned. Partner, give the order."],
+          "touch": {
+            "idle": ["Systems ready. What is our next move?", "Idle does not mean inattentive. I am observing the environment.", "Friendly contact detected and added to the log."]
+          }
+        },
+        "HuDie": {
+          "welcome": ["HuDie has landed softly.", "I followed the wind and found you.", "Quietly now. My wings are listening to the breeze."],
+          "touch": {
+            "hello": ["Hello. Shall we look at the view together?", "Even a fleeting meeting deserves a proper greeting.", "The wind brought news of you today."],
+            "here": ["Hush, I am keeping you quiet company.", "I did not fly far, only paused between light and shadow.", "When you look up, I will still be here."]
+          }
+        },
+        "MiSide": {
+          "welcome": ["MiSide has been waiting for you.", "You finally came. No disappearing quietly this time.", "Welcome back. I saved all this time for you."],
+          "touch": {
+            "return": ["You came back! I knew you would.", "Familiar footsteps detected. It could only be you.", "Perfect timing. I saved so many things to tell you."],
+            "stay": ["Stay a little longer, okay?", "It would be nice if time slowed down, would it not?", "Do not close this moment yet. We can share one more sentence."]
+          }
+        },
+        "YouXiaoMiao": {
+          "welcome": ["YouXiaoMiao is here to keep you company!", "Meow! Today's companionship service is now running.", "Human servant... I mean, dear friend, you are here!"],
+          "touch": {
+            "meow": ["Meow! Did you miss me?", "That meow was today's limited-edition greeting.", "One pat is fine. A second one might also be acceptable."],
+            "watch": ["I am keeping an eye on you.", "No secret slacking. The cat sees everything.", "Work hard if you like, but remember to rest on time. Meow."]
+          }
+        }
+      }
+    }
+  }
+}

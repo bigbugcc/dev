@@ -1,5 +1,5 @@
 {
-  "welcome": "YouXiaoMiao is ready.",
+  "welcomeKey": "models.YouXiaoMiao.welcome",
   "parameters": {
     "Param85": 1
   },
@@ -14,10 +14,10 @@
   ],
   "touchList": [
     {
-      "text": "YouXiaoMiao says hello."
+      "textKey": "models.YouXiaoMiao.touch.meow"
     },
     {
-      "text": "YouXiaoMiao is here."
+      "textKey": "models.YouXiaoMiao.touch.watch"
     }
   ]
 }
