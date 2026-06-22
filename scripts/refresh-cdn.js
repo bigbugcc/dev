@@ -1,9 +1,12 @@
 "use strict";
 
 const fs = require("fs");
+const os = require("os");
+const path = require("path");
 const { spawnSync } = require("child_process");
 
 const ZERO_SHA = /^0+$/;
+const REFRESH_LIST_PATH = path.resolve(__dirname, "..", "refresh-cdn.list");
 const TERMINAL_FAILURE_STATUSES = new Set(["failed", "timeout", "canceled", "invalid"]);
 const DEFAULTS = {
   batchSize: 500,
@@ -40,6 +43,11 @@ function writeSummary(lines) {
   fs.appendFileSync(summaryPath, `${lines.join("\n")}\n`, "utf8");
 }
 
+function setOutput(name, value) {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) fs.appendFileSync(outputPath, `${name}=${value}\n`, "utf8");
+}
+
 function positiveInteger(name, fallback) {
   const raw = process.env[name];
   if (raw === undefined || raw === "") return fallback;
@@ -51,10 +59,12 @@ function positiveInteger(name, fallback) {
 }
 
 function parseArguments(argv) {
-  const options = { base: undefined, head: undefined, dryRun: false, files: [] };
+  const options = { base: undefined, head: undefined, checkOnly: false, dryRun: false, forceList: false, files: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (argument === "--dry-run") options.dryRun = true;
+    if (argument === "--check-only") options.checkOnly = true;
+    else if (argument === "--dry-run") options.dryRun = true;
+    else if (argument === "--force-list") options.forceList = true;
     else if (argument === "--base" || argument === "--head") {
       const value = argv[index + 1];
       if (!value) throw new Error(`${argument} requires a git revision`);
@@ -70,8 +80,12 @@ function parseArguments(argv) {
   return options;
 }
 
-function runGit(args) {
-  const result = spawnSync("git", args, { encoding: "utf8", maxBuffer: 50 * 1024 * 1024 });
+function runGit(args, options = {}) {
+  const result = spawnSync("git", args, {
+    encoding: "utf8",
+    maxBuffer: 50 * 1024 * 1024,
+    ...options,
+  });
   if (result.error) throw result.error;
   if (result.status !== 0) {
     throw new Error(`git ${args.join(" ")} failed: ${(result.stderr || "unknown error").trim()}`);
@@ -106,22 +120,29 @@ function parseNameStatus(output) {
 }
 
 function collectChanges(options) {
+  const head = options.head || process.env.CDN_HEAD_SHA || process.env.GITHUB_SHA || "HEAD";
+  const forceList = options.forceList || process.env.CDN_FORCE_REFRESH === "true";
+  if (forceList) {
+    return runGit(["ls-tree", "-r", "--name-only", "-z", head])
+      .split("\0")
+      .filter(Boolean)
+      .map((path) => ({ status: "A", path }));
+  }
   if (options.files.length > 0) return options.files.map((path) => ({ status: "M", path }));
 
-  const head = options.head || process.env.CDN_HEAD_SHA || process.env.GITHUB_SHA || "HEAD";
   const base = options.base || process.env.CDN_BASE_SHA || process.env.GITHUB_EVENT_BEFORE;
   let output;
 
   if (!base || ZERO_SHA.test(base)) {
-    // A branch's first push has an all-zero before SHA. Treat the full deployed tree as new,
+    // A branch's first push has an all-zero before SHA. Treat the full tree as new,
     // even when the pushed HEAD itself has parents from another branch.
-    output = runGit(["ls-tree", "-r", "--name-only", "-z", head, "--", "live2d/"])
+    output = runGit(["ls-tree", "-r", "--name-only", "-z", head])
       .split("\0")
       .filter(Boolean)
       .map((path) => `A\0${path}\0`)
       .join("");
   } else {
-    output = runGit(["diff", "--name-status", "--find-renames", "-z", base, head, "--", "live2d/"]);
+    output = runGit(["diff", "--name-status", "--find-renames", "-z", base, head]);
   }
   return parseNameStatus(output);
 }
@@ -130,9 +151,58 @@ function normalizeAssetPath(path) {
   return path.replace(/\\/g, "/").replace(/^\.\//, "").replace(/^\/+/, "");
 }
 
-function isCdnAsset(path) {
-  const normalized = normalizeAssetPath(path);
-  return normalized.startsWith("live2d/") && normalized !== "live2d/README.md";
+function matchRefreshList(paths, listPath = REFRESH_LIST_PATH) {
+  if (!fs.existsSync(listPath)) throw new Error(`CDN refresh allowlist not found: ${listPath}`);
+  const normalizedPaths = [...new Set(paths.map(normalizeAssetPath).filter(Boolean))];
+  if (normalizedPaths.length === 0) return new Set();
+
+  const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "refresh-cdn-"));
+  try {
+    fs.copyFileSync(listPath, path.join(temporaryDirectory, ".gitignore"));
+    const emptyGlobalExclude = path.join(temporaryDirectory, "global-excludes");
+    fs.writeFileSync(emptyGlobalExclude, "", "utf8");
+    runGit(["init", "--quiet"], { cwd: temporaryDirectory });
+    const result = spawnSync("git", [
+      "-c", `core.excludesFile=${emptyGlobalExclude}`,
+      "check-ignore", "--no-index", "-z", "--stdin",
+    ], {
+      cwd: temporaryDirectory,
+      input: `${normalizedPaths.join("\0")}\0`,
+      encoding: "utf8",
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0 && result.status !== 1) {
+      throw new Error(`Unable to evaluate ${listPath}: ${(result.stderr || "unknown git error").trim()}`);
+    }
+    return new Set(result.stdout.split("\0").filter(Boolean).map(normalizeAssetPath));
+  } finally {
+    fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+function filterChangesByRefreshList(changes, listPath = REFRESH_LIST_PATH) {
+  const candidatePaths = changes.flatMap((change) => [change.oldPath, change.path]).filter(Boolean);
+  const matchedPaths = matchRefreshList(candidatePaths, listPath);
+  const selected = [];
+
+  for (const change of changes) {
+    const currentPath = normalizeAssetPath(change.path);
+    const oldPath = change.oldPath && normalizeAssetPath(change.oldPath);
+    const currentMatches = matchedPaths.has(currentPath);
+    const oldMatches = oldPath && matchedPaths.has(oldPath);
+
+    if (change.status === "R") {
+      if (oldMatches && currentMatches) selected.push({ ...change, oldPath, path: currentPath });
+      else if (oldMatches) selected.push({ status: "D", path: oldPath });
+      else if (currentMatches) selected.push({ status: "A", path: currentPath });
+    } else if (change.status === "C") {
+      if (currentMatches) selected.push({ status: "A", path: currentPath });
+    } else if (currentMatches) {
+      selected.push({ ...change, path: currentPath });
+    }
+  }
+  return selected;
 }
 
 function encodePath(path) {
@@ -162,9 +232,7 @@ function buildTargets(changes, domain) {
     const path = normalizeAssetPath(change.path);
     const oldPath = change.oldPath && normalizeAssetPath(change.oldPath);
 
-    if (oldPath && isCdnAsset(oldPath)) purgePaths.add(oldPath);
-    if (!isCdnAsset(path)) continue;
-
+    if (oldPath) purgePaths.add(oldPath);
     purgePaths.add(path);
     if (change.status !== "D") prefetchPaths.add(path);
   }
@@ -279,25 +347,38 @@ function printUrlPlan(label, urls) {
 
 async function main() {
   const options = parseArguments(process.argv.slice(2));
+
+  group("Match changed files against refresh-cdn.list");
+  const allChanges = collectChanges(options);
+  const changes = filterChangesByRefreshList(allChanges);
+  const forceList = options.forceList || process.env.CDN_FORCE_REFRESH === "true";
+  console.log(`Mode: ${forceList ? "manual force refresh" : "changed files only"}`);
+  for (const change of allChanges) {
+    console.log(`${change.status}\t${change.oldPath ? `${change.oldPath} -> ` : ""}${change.path}`);
+  }
+  console.log(`Matched changes: ${changes.length}/${allChanges.length}`);
+  setOutput("refresh_required", changes.length > 0 ? "true" : "false");
+  endGroup();
+
+  if (changes.length === 0) {
+    annotation("notice", "CDN skipped", "No changed files matched refresh-cdn.list");
+    writeSummary(["## EdgeOne CDN", "", "No changed files matched `refresh-cdn.list`; CDN work was skipped."]);
+    return;
+  }
+
+  if (options.checkOnly) {
+    annotation("notice", forceList ? "Forced CDN refresh ready" : "CDN changes detected", `${changes.length} entries matched refresh-cdn.list`);
+    return;
+  }
+
   const domain = process.env.TEO_DOMAIN;
   if (!domain) throw new Error("Missing required environment variable: TEO_DOMAIN");
 
-  group("Detect changed CDN assets");
-  const changes = collectChanges(options);
-  for (const change of changes) {
-    console.log(`${change.status}\t${change.oldPath ? `${change.oldPath} -> ` : ""}${change.path}`);
-  }
-  if (changes.length === 0) console.log("No live2d files changed in this push range.");
+  group("Build CDN URL plan");
   const { purgeUrls, prefetchUrls } = buildTargets(changes, domain);
   printUrlPlan("Purge targets", purgeUrls);
   printUrlPlan("Prefetch targets", prefetchUrls);
   endGroup();
-
-  if (purgeUrls.length === 0) {
-    annotation("notice", "CDN skipped", "No deployable Live2D assets changed");
-    writeSummary(["## EdgeOne CDN", "", "No deployable Live2D assets changed; purge and prefetch were skipped."]);
-    return;
-  }
 
   if (options.dryRun || process.env.TEO_DRY_RUN === "true") {
     annotation("notice", "CDN dry run", `Would purge ${purgeUrls.length} URLs and prefetch ${prefetchUrls.length} URLs`);
@@ -401,4 +482,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildTargets, parseNameStatus };
+module.exports = { buildTargets, collectChanges, filterChangesByRefreshList, matchRefreshList, parseNameStatus };

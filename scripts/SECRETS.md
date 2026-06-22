@@ -6,13 +6,36 @@ The workflow in [`.github/workflows/cdn-refresh.yml`](../.github/workflows/cdn-r
 
 ## Trigger and behavior
 
-The workflow runs when `live2d/**` changes are pushed to `main` or `master`, except for `live2d/README.md`.
+The workflow starts for every push to `main` or `master`, and it can be run manually from the GitHub Actions page. For pushes, its first lightweight step compares all changed repository paths with the root-level [`refresh-cdn.list`](../refresh-cdn.list). Dependency installation, tests, and EdgeOne API calls run only when at least one path matches the list.
 
 - Added and modified files are purged, then prefetched.
 - Deleted files are purged but not prefetched.
 - For renamed files, the old and new URLs are purged; only the new URL is prefetched.
 - Jobs are serialized to avoid competing for the same EdgeOne daily quota.
 - The workflow checks the live EdgeOne quota before creating tasks and waits for every purge and prefetch task to finish.
+
+## CDN refresh allowlist
+
+`refresh-cdn.list` uses Git's `.gitignore` matching engine, but its positive patterns have allowlist semantics: a changed file must match a pattern to enter the CDN workflow. Use one pattern per line.
+
+```gitignore
+# Include every file below live2d.
+/live2d/**
+
+# Exclude one file from the included tree.
+!/live2d/README.md
+
+# Include one exact repository-relative file.
+/assets/logo.png
+```
+
+The supported syntax is the same as `.gitignore`, including comments (`#`), negation (`!`), root-relative patterns (`/path`), directory patterns, `*`, `?`, and `**`. The list is the only CDN path filter; the GitHub workflow intentionally has no `paths` filter.
+
+## Manual force refresh
+
+Open **Actions → Refresh and prefetch EdgeOne CDN → Run workflow** and select `main` or `master`. A manual run ignores the commit diff, enumerates every file tracked in the selected commit, and force-refreshes every path matched by `refresh-cdn.list`. Files excluded with `!pattern` remain excluded.
+
+Manual runs still enforce `TEO_MAX_TARGETS_PER_RUN`, the live EdgeOne batch and daily quotas, and the configured prefetch mode. They can consume substantial purge quota, prefetch quota, origin bandwidth, and edge traffic. Manual runs selected on other branches are skipped to protect the production CDN.
 
 ## Required repository secrets
 
@@ -71,10 +94,11 @@ The workflow supplies these values from the GitHub push event; they are not repo
 
 | Name | Source | Purpose |
 | --- | --- | --- |
-| `CDN_BASE_SHA` | `github.event.before` | Start of the pushed commit range. |
+| `CDN_BASE_SHA` | `github.event.before`, otherwise `github.sha` | Start of the pushed commit range. Ignored during a manual force refresh. |
 | `CDN_HEAD_SHA` | `github.sha` | End of the pushed commit range. |
+| `CDN_FORCE_REFRESH` | `github.event_name == 'workflow_dispatch'` | Makes a manual run enumerate every tracked path before applying `refresh-cdn.list`. |
 
-For the first push of a branch, GitHub provides an all-zero base SHA. The script then treats every current `live2d/**` file as newly deployed.
+For the first push of a branch, GitHub provides an all-zero base SHA. The script treats every current repository file as new, then keeps only paths matched by `refresh-cdn.list`.
 
 ## Local dry run
 
@@ -95,6 +119,7 @@ node scripts/refresh-cdn.js --dry-run "live2d/live2d-core.js"
 ## Troubleshooting
 
 - **No available prefetch quota:** the current EdgeOne plan may not include URL prefetch, or its daily quota is exhausted.
+- **Workflow ran but CDN steps were skipped:** none of the changed paths matched `refresh-cdn.list`; inspect the lightweight matching step and the list patterns.
 - **Target limit exceeded:** review the detected files, then deliberately raise `TEO_MAX_TARGETS_PER_RUN` if the deployment is expected.
 - **Task timeout:** check the EdgeOne task history and origin availability before raising `TEO_WAIT_TIMEOUT_SECONDS`.
 - **Incorrect CDN URL:** verify that `TEO_DOMAIN` does not already contain the repository's `live2d` path.

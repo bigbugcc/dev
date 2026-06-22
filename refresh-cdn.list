@@ -1,0 +1,6 @@
+# Gitignore-style allowlist for CDN refreshes.
+# A changed path must match a positive pattern to be refreshed.
+# Use !pattern to exclude a path that would otherwise match.
+
+/live2d/**
+!/live2d/README.md

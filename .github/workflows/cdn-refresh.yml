@@ -2,13 +2,11 @@ name: Refresh and prefetch EdgeOne CDN
 # Configuration: scripts/SECRETS.md (English) / scripts/SECRETS.zh-CN.md (简体中文)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
       - master
-    paths:
-      - 'live2d/**'
-      - '!live2d/README.md'
 
 permissions:
   contents: read
@@ -21,6 +19,7 @@ concurrency:
 jobs:
   refresh-cdn:
     name: Purge and prefetch changed assets
+    if: github.event_name == 'push' || github.ref_name == 'main' || github.ref_name == 'master'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -35,16 +34,28 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Match changed files against refresh-cdn.list
+        id: cdn-changes
+        env:
+          CDN_BASE_SHA: ${{ github.event.before || github.sha }}
+          CDN_HEAD_SHA: ${{ github.sha }}
+          CDN_FORCE_REFRESH: ${{ github.event_name == 'workflow_dispatch' }}
+        run: node scripts/refresh-cdn.js --base "$CDN_BASE_SHA" --head "$CDN_HEAD_SHA" --check-only
+
       - name: Install EdgeOne SDK
+        if: steps.cdn-changes.outputs.refresh_required == 'true'
         run: npm install --omit=dev --no-audit --no-fund
 
       - name: Validate CDN change mapping
+        if: steps.cdn-changes.outputs.refresh_required == 'true'
         run: npm run test:cdn
 
       - name: Purge changed files and prefetch current files
+        if: steps.cdn-changes.outputs.refresh_required == 'true'
         env:
-          CDN_BASE_SHA: ${{ github.event.before }}
+          CDN_BASE_SHA: ${{ github.event.before || github.sha }}
           CDN_HEAD_SHA: ${{ github.sha }}
+          CDN_FORCE_REFRESH: ${{ github.event_name == 'workflow_dispatch' }}
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           TEO_ZONE_ID: ${{ secrets.TEO_ZONE_ID }}

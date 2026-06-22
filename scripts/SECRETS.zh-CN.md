@@ -6,13 +6,36 @@
 
 ## 触发条件与处理方式
 
-当 `live2d/**` 的变更推送至 `main` 或 `master` 分支时触发，但忽略 `live2d/README.md`。
+每次向 `main` 或 `master` 分支推送时都会启动工作流，也可以从 GitHub Actions 页面手动运行。对于 push，第一个轻量步骤会将仓库中的全部变更路径与根目录的 [`refresh-cdn.list`](../refresh-cdn.list) 对比。只有至少一个路径命中列表时，才继续安装依赖、运行测试并调用 EdgeOne API。
 
 - 新增和修改的文件先清除缓存，再进行预热。
 - 删除的文件只清除缓存，不进行预热。
 - 文件重命名时，旧 URL 和新 URL 都会清除缓存，但只预热新 URL。
 - 所有部署任务串行执行，避免同时消耗同一份 EdgeOne 每日额度。
 - 创建任务前查询 EdgeOne 实时配额，并等待每个刷新和预热任务执行完成。
+
+## CDN 刷新白名单
+
+`refresh-cdn.list` 使用 Git 的 `.gitignore` 匹配引擎，但普通模式表示白名单：变更文件必须命中某条模式，才会进入 CDN 后续流程。每行填写一个模式。
+
+```gitignore
+# 包含 live2d 下的全部文件。
+/live2d/**
+
+# 从已包含的目录树中排除一个文件。
+!/live2d/README.md
+
+# 包含一个仓库相对路径文件。
+/assets/logo.png
+```
+
+支持与 `.gitignore` 相同的语法，包括注释（`#`）、取反（`!`）、根路径模式（`/path`）、目录模式、`*`、`?` 和 `**`。该列表是唯一的 CDN 路径过滤配置，GitHub workflow 不再配置 `paths`。
+
+## 手动强制刷新
+
+进入 **Actions → Refresh and prefetch EdgeOne CDN → Run workflow**，选择 `main` 或 `master`。手动运行会忽略提交差异，枚举所选提交中受 Git 管理的全部文件，并强制刷新 `refresh-cdn.list` 命中的所有路径；通过 `!pattern` 排除的路径仍不会刷新。
+
+手动运行仍受 `TEO_MAX_TARGETS_PER_RUN`、EdgeOne 实时单批/每日配额以及预热模式限制。该操作可能消耗较多刷新额度、预热额度、源站带宽和边缘流量。为保护生产 CDN，在其他分支上选择手动运行时任务会被跳过。
 
 ## 必需的仓库 Secrets
 
@@ -71,10 +94,11 @@ teo:DescribePrefetchTasks
 
 | 名称 | 来源 | 用途 |
 | --- | --- | --- |
-| `CDN_BASE_SHA` | `github.event.before` | 本次推送提交范围的起点。 |
+| `CDN_BASE_SHA` | `github.event.before`，否则使用 `github.sha` | 本次推送提交范围的起点；手动强制刷新时忽略。 |
 | `CDN_HEAD_SHA` | `github.sha` | 本次推送提交范围的终点。 |
+| `CDN_FORCE_REFRESH` | `github.event_name == 'workflow_dispatch'` | 让手动运行先枚举全部受 Git 管理的路径，再应用 `refresh-cdn.list`。 |
 
-分支首次推送时，GitHub 会提供全零的 base SHA；脚本会将当前所有 `live2d/**` 文件视为新部署资源。
+分支首次推送时，GitHub 会提供全零的 base SHA；脚本会先将仓库中的全部当前文件视为新增，再仅保留 `refresh-cdn.list` 命中的路径。
 
 ## 本地试运行
 
@@ -95,6 +119,7 @@ node scripts/refresh-cdn.js --dry-run "live2d/live2d-core.js"
 ## 常见问题
 
 - **没有可用的预热额度：** 当前 EdgeOne 套餐可能不支持 URL 预热，或当日额度已经用完。
+- **工作流已运行但跳过 CDN 步骤：** 本次变更没有路径命中 `refresh-cdn.list`，请检查轻量匹配步骤的日志和列表模式。
 - **目标数量超出限制：** 先检查检测到的文件；确认部署符合预期后，再有意识地提高 `TEO_MAX_TARGETS_PER_RUN`。
 - **任务等待超时：** 提高 `TEO_WAIT_TIMEOUT_SECONDS` 前，先检查 EdgeOne 任务记录及源站可用性。
 - **CDN URL 不正确：** 检查 `TEO_DOMAIN` 是否已经包含仓库的 `live2d` 路径。
