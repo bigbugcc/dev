@@ -1,29 +1,35 @@
 {
-  "welcome": "Diana is ready.",
+  "welcomeKey": "models.Diana.welcome",
   "initMotion": "Tap抱阿草-左手",
   "touchList": [
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.angry",
+      "hitArea": "生气 -领结",
       "motion": "Tap生气 -领结"
     },
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.tears",
+      "hitArea": "哭 -眼角",
       "motion": "Tap哭 -眼角"
     },
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.shy",
+      "hitArea": "害羞-中间刘海",
       "motion": "Tap害羞-中间刘海"
     },
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.hug",
+      "hitArea": "抱阿草-左手",
       "motion": "Tap抱阿草-左手"
     },
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.shakeHead",
+      "hitArea": "摇头- 身体",
       "motion": "Tap摇头- 身体"
     },
     {
-      "text": "Diana action.",
+      "textKey": "models.Diana.touch.leave",
+      "hitArea": "打瞌睡- 呆毛",
       "motion": "Leave"
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "welcome": "Ava is ready.",
+  "welcomeKey": "models.Ava.welcome",
   "initMotion": {
     "motion": "Tap左眼",
     "from": {
@@ -23,11 +23,13 @@
   "scaleWidth": 1.2,
   "touchList": [
     {
-      "text": "Ava action.",
+      "textKey": "models.Ava.touch.rightHand",
+      "hitArea": "右手",
       "motion": "Tap右手"
     },
     {
-      "text": "Ava action.",
+      "textKey": "models.Ava.touch.leftEye",
+      "hitArea": "左眼",
       "motion": "Tap左眼",
       "from": {
         "Part15": 1
@@ -37,7 +39,8 @@
       }
     },
     {
-      "text": "Ava action.",
+      "textKey": "models.Ava.touch.necklace",
+      "hitArea": "胸口项链",
       "motion": "Tap胸口项链",
       "from": {
         "Part12": 1

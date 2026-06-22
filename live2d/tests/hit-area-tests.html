@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Live2D hit-area tests</title>
+  <script>
+    window.Live2DWidgetConfig = {
+      model: "Diana",
+      locale: "zh-CN",
+      hidden: false,
+      tips: false,
+      contextualTouchChance: 0
+    };
+  </script>
+  <script src="../live2d-core.js"></script>
+</head>
+<body>
+  <pre id="result">WAITING_FOR_MODEL</pre>
+  <script>
+    (function() {
+      const result = document.getElementById("result");
+      const deadline = Date.now() + 15000;
+
+      function finish(message) {
+        result.textContent = message;
+      }
+
+      function run() {
+        const widget = window.live2d;
+        if (!widget || !widget.model || !widget.modelConfig || !widget.elements.canvas.onclick) {
+          if (Date.now() < deadline) return setTimeout(run, 100);
+          return finish("TESTS_FAILED: model load timeout");
+        }
+        widget.app.stop();
+        widget.model.internalModel.motionManager.state.complete();
+
+        try {
+          const actions = widget.modelConfig.touchList.filter((action) => action.hitArea);
+          const targets = new Set(actions.flatMap((action) =>
+            Array.isArray(action.hitArea) ? action.hitArea : [action.hitArea]
+          ));
+          const points = new Map();
+          const canvas = widget.elements.canvas;
+          const rect = canvas.getBoundingClientRect();
+
+          for (let y = 0; y < canvas.height && points.size < targets.size; y += 2) {
+            for (let x = 0; x < canvas.width && points.size < targets.size; x += 2) {
+              const hitAreas = widget.getHitAreas({
+                clientX: rect.left + x * rect.width / canvas.width,
+                clientY: rect.top + y * rect.height / canvas.height,
+              });
+              if (!hitAreas.some((area) => targets.has(area))) continue;
+              const action = widget.selectTouchAction(actions, hitAreas);
+              const actionTargets = action && (Array.isArray(action.hitArea) ? action.hitArea : [action.hitArea]);
+              if (actionTargets) {
+                actionTargets.forEach((area) => {
+                  if (targets.has(area) && !points.has(area)) points.set(area, { x, y });
+                });
+              }
+            }
+          }
+
+          const missing = [...targets].filter((target) => !points.has(target));
+          if (missing.length > 0) throw new Error(`unreachable hit areas: ${missing.join(", ")}`);
+
+          let capturedAction = null;
+          widget.playAction = (action) => {
+            capturedAction = action;
+          };
+          targets.forEach((target) => {
+            const point = points.get(target);
+            capturedAction = null;
+            canvas.onclick({
+              clientX: rect.left + point.x * rect.width / canvas.width,
+              clientY: rect.top + point.y * rect.height / canvas.height,
+            });
+            const actionTargets = capturedAction && (Array.isArray(capturedAction.hitArea)
+              ? capturedAction.hitArea
+              : [capturedAction.hitArea]);
+            if (!actionTargets || !actionTargets.includes(target)) {
+              throw new Error(`click did not route to ${target}`);
+            }
+          });
+
+          finish(`TESTS_OK ${widget.modelConfig.name} ${targets.size} hit areas`);
+        } catch (err) {
+          finish(`TESTS_FAILED: ${err.message}`);
+        }
+      }
+
+      run();
+    })();
+  </script>
+</body>
+</html>

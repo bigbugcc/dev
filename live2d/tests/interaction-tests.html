@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live2D interaction tests</title>
+</head>
+<body>
+  <pre id="result">RUNNING</pre>
+  <script>
+    (async function() {
+      const result = document.getElementById("result");
+      let count = 0;
+      const assert = (condition, name) => {
+        if (!condition) throw new Error(name);
+        count++;
+      };
+
+      try {
+        const [i18nSource, contextSource, source, languageData] = await Promise.all([
+          fetch("../libs/live2d-i18n.js").then((response) => response.text()),
+          fetch("../libs/live2d-context.js").then((response) => response.text()),
+          fetch("../live2d-core.js").then((response) => response.text()),
+          fetch("../locales/interactions.json").then((response) => response.json()),
+        ]);
+        const testableSource = source.replace(
+          /\n  loadAllResources\(\)[\s\S]*\n\}\)\(\);\s*$/,
+          "\n})();"
+        );
+
+        new Function(i18nSource)();
+        new Function(contextSource)();
+        new Function(testableSource)();
+
+        const widget = Object.create(window.Live2DWidget.prototype);
+        const textManager = new Live2DModules.TextManager("zh-TW", "en");
+        textManager.setData(languageData);
+        Object.assign(widget, {
+          config: { locale: "zh-TW", fallbackLocale: "en" },
+          textManager,
+          elements: {},
+        });
+
+        assert(textManager.getLocaleCandidates()[0] === "zh-CN", "zh-TW base-language fallback");
+        assert(widget.getText("ui.home")[0] === "返回首页。", "Chinese key lookup");
+
+        widget.config.locale = "fr-FR";
+        textManager.locale = "fr-FR";
+        assert(textManager.getLocaleCandidates()[0] === "en", "unknown-locale fallback");
+        assert(widget.getText("ui.home")[0] === "Back to home.", "English key lookup");
+
+        widget.config.locale = "zh-CN";
+        textManager.locale = "zh-CN";
+        const savedHome = languageData.locales["zh-CN"].ui.home;
+        languageData.locales["zh-CN"].ui.home = [];
+        assert(widget.getText("ui.home")[0] === "Back to home.", "empty-array fallback");
+        languageData.locales["zh-CN"].ui.home = savedHome;
+        assert(widget.getText("models.NoSuch.touch.any")[0] === "嗨，在看我吗？", "default-model fallback");
+
+        const states = [
+          [2, "lateNight"],
+          [6, "dawn"],
+          [9, "morning"],
+          [12, "noon"],
+          [15, "afternoon"],
+          [19, "evening"],
+          [22, "night"],
+        ];
+        states.forEach(([hour, expected]) => {
+          assert(widget.getContextState(new Date(2026, 0, 1, hour)).timeOfDay === expected, `${expected} boundary`);
+        });
+
+        assert(
+          Live2DModules.Context.getSeason(0, "north") === "winter" &&
+            Live2DModules.Context.getSeason(2, "north") === "spring" &&
+            Live2DModules.Context.getSeason(5, "north") === "summer" &&
+            Live2DModules.Context.getSeason(8, "north") === "autumn",
+          "northern seasons"
+        );
+        assert(
+          Live2DModules.Context.getSeason(0, "south") === "summer" &&
+            Live2DModules.Context.getSeason(5, "south") === "winter",
+          "southern seasons"
+        );
+        assert(
+          Live2DModules.Context.getRegion("Asia/Shanghai") === "eastAsia" &&
+            Live2DModules.Context.getRegion("America/Sao_Paulo") === "latinAmerica" &&
+            Live2DModules.Context.getRegion("Europe/London") === "europe",
+          "region mapping"
+        );
+        assert(
+          Live2DModules.Context.getHemisphere("Australia/Sydney") === "south" &&
+            Live2DModules.Context.getHemisphere("Europe/London") === "north",
+          "hemisphere mapping"
+        );
+
+        const pool = ["a", "b", "c"];
+        const chosen = [];
+        for (let i = 0; i < pool.length; i++) {
+          const message = widget.pickMessage(pool);
+          chosen.push(message);
+          textManager.remember(message);
+        }
+        assert(new Set(chosen).size === 3 && widget.pickMessage(pool) === null, "recent-message deduplication");
+
+        const actions = [
+          { hitArea: "face", motion: "faceMotion" },
+          { hitArea: "hand", motion: "handMotion" },
+          { motion: "genericMotion" },
+        ];
+        assert(widget.selectTouchAction(actions, ["hand"]).motion === "handMotion", "hit-area action routing");
+        assert(widget.selectTouchAction(actions, ["unknown"]).motion === "genericMotion", "generic action fallback");
+        assert(
+          widget.selectTouchAction(actions.slice(0, 2), ["unknown"]) === null,
+          "specific-only actions ignore unmatched locations"
+        );
+
+        let testedPoint = null;
+        widget.elements.canvas = {
+          width: 600,
+          height: 300,
+          getBoundingClientRect: () => ({ left: 10, top: 20, width: 300, height: 150 }),
+        };
+        const hitAreas = widget.getHitAreas(
+          { clientX: 160, clientY: 95 },
+          { hitTest: (x, y) => ((testedPoint = [x, y]), ["face"]) }
+        );
+        assert(hitAreas[0] === "face" && testedPoint[0] === 300 && testedPoint[1] === 150, "canvas hit-test coordinates");
+
+        textManager.setData(null);
+        assert(widget.getText("ui.home") === undefined, "language-load failure behavior");
+        result.textContent = `TESTS_OK ${count}`;
+      } catch (err) {
+        result.textContent = `TESTS_FAILED: ${err.message}`;
+      }
+    })();
+  </script>
+</body>
+</html>

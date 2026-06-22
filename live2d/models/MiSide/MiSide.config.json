@@ -1,11 +1,11 @@
 {
-  "welcome": "MiSide is ready.",
+  "welcomeKey": "models.MiSide.welcome",
   "touchList": [
     {
-      "text": "MiSide says hello."
+      "textKey": "models.MiSide.touch.return"
     },
     {
-      "text": "MiSide is here."
+      "textKey": "models.MiSide.touch.stay"
     }
   ]
 }

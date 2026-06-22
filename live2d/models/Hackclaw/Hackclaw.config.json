@@ -1,9 +1,9 @@
 {
-  "welcome": "Hackclaw is ready.",
+  "welcomeKey": "models.Hackclaw.welcome",
   "initMotion": "Idle",
   "touchList": [
     {
-      "text": "Hackclaw action.",
+      "textKey": "models.Hackclaw.touch.idle",
       "motion": "Idle"
     }
   ]

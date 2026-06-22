@@ -1,11 +1,11 @@
 {
-  "welcome": "GaiZi is ready.",
+  "welcomeKey": "models.GaiZi.welcome",
   "touchList": [
     {
-      "text": "GaiZi says hello."
+      "textKey": "models.GaiZi.touch.hello"
     },
     {
-      "text": "GaiZi is here."
+      "textKey": "models.GaiZi.touch.here"
     }
   ]
 }
