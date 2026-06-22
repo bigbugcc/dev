@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "generate-model-manifest": "node scripts/generate-model-manifest.js",
-    "refresh-cdn": "node scripts/refresh-cdn.js"
+    "refresh-cdn": "node scripts/refresh-cdn.js",
+    "test:cdn": "node --test scripts/refresh-cdn.test.js"
   },
   "dependencies": {
     "tencentcloud-sdk-nodejs-teo": "^4.0.0",

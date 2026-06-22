@@ -1,4 +1,5 @@
-name: Refresh CDN
+name: Refresh and prefetch EdgeOne CDN
+# Configuration: scripts/SECRETS.md (English) / scripts/SECRETS.zh-CN.md (简体中文)
 
 on:
   push:
@@ -7,42 +8,51 @@ on:
       - master
     paths:
       - 'live2d/**'
-    paths-ignore:
-      - '.github/**'
-      - 'live2d/README.md'
+      - '!live2d/README.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialize all deployments so two branches cannot race the same daily quota.
+  group: edgeone-cdn
+  cancel-in-progress: false
 
 jobs:
   refresh-cdn:
+    name: Purge and prefetch changed assets
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
-      - name: Checkout code
+      - name: Checkout the complete push history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          separator: " "
-          files: |
-            live2d/**
-
-      - name: Setup Node.js
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: npm install
+      - name: Install EdgeOne SDK
+        run: npm install --omit=dev --no-audit --no-fund
 
-      - name: Run CDN refresh script
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Validate CDN change mapping
+        run: npm run test:cdn
+
+      - name: Purge changed files and prefetch current files
         env:
+          CDN_BASE_SHA: ${{ github.event.before }}
+          CDN_HEAD_SHA: ${{ github.sha }}
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           TEO_ZONE_ID: ${{ secrets.TEO_ZONE_ID }}
           TEO_DOMAIN: ${{ secrets.TEO_DOMAIN }}
-        run: node scripts/refresh-cdn.js ${{ steps.changed-files.outputs.all_changed_files }}
+          # Optional repository variables. Defaults are conservative and can be raised deliberately.
+          TEO_BATCH_SIZE: ${{ vars.TEO_BATCH_SIZE || '500' }}
+          TEO_MAX_TARGETS_PER_RUN: ${{ vars.TEO_MAX_TARGETS_PER_RUN || '1000' }}
+          TEO_POLL_INTERVAL_SECONDS: ${{ vars.TEO_POLL_INTERVAL_SECONDS || '5' }}
+          TEO_WAIT_TIMEOUT_SECONDS: ${{ vars.TEO_WAIT_TIMEOUT_SECONDS || '600' }}
+          TEO_PREFETCH_MODE: ${{ vars.TEO_PREFETCH_MODE || 'default' }}
+        run: node scripts/refresh-cdn.js --base "$CDN_BASE_SHA" --head "$CDN_HEAD_SHA"
