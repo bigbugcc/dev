@@ -267,6 +267,14 @@ function quotaFor(quotas, type) {
   return (quotas || []).find((quota) => quota.Type === type);
 }
 
+function resolveTeoClient(sdk) {
+  const Client = sdk?.teo?.v20220901?.Client;
+  if (typeof Client !== "function") {
+    throw new Error("Unsupported tencentcloud-sdk-nodejs-teo export: expected teo.v20220901.Client");
+  }
+  return Client;
+}
+
 function assertCapacity(label, targetCount, quota, maxTargetsPerRun) {
   if (targetCount === 0) return;
   if (targetCount > maxTargetsPerRun) {
@@ -399,7 +407,7 @@ async function main() {
 
   // Loaded only for real API calls, so local --dry-run works without installing dependencies.
   const tencentcloud = require("tencentcloud-sdk-nodejs-teo");
-  const TeoClient = tencentcloud.v20220901.Client;
+  const TeoClient = resolveTeoClient(tencentcloud);
   const client = new TeoClient({
     credential: {
       secretId: process.env.TENCENT_SECRET_ID,
@@ -482,4 +490,11 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildTargets, collectChanges, filterChangesByRefreshList, matchRefreshList, parseNameStatus };
+module.exports = {
+  buildTargets,
+  collectChanges,
+  filterChangesByRefreshList,
+  matchRefreshList,
+  parseNameStatus,
+  resolveTeoClient,
+};

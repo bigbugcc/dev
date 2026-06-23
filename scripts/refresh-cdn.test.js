@@ -5,7 +5,22 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { buildTargets, collectChanges, filterChangesByRefreshList, parseNameStatus } = require("./refresh-cdn");
+const {
+  buildTargets,
+  collectChanges,
+  filterChangesByRefreshList,
+  parseNameStatus,
+  resolveTeoClient,
+} = require("./refresh-cdn");
+
+test("resolves the Client from the standalone TEO SDK export", () => {
+  class FakeTeoClient {}
+  assert.equal(resolveTeoClient({ teo: { v20220901: { Client: FakeTeoClient } } }), FakeTeoClient);
+  assert.throws(
+    () => resolveTeoClient({ v20220901: { Client: FakeTeoClient } }),
+    /expected teo\.v20220901\.Client/,
+  );
+});
 
 test("force-list mode enumerates every tracked file as a refresh candidate", () => {
   const changes = collectChanges({ forceList: true, head: "HEAD", files: [] });
