@@ -7,6 +7,7 @@ const { spawnSync } = require("child_process");
 
 const ZERO_SHA = /^0+$/;
 const REFRESH_LIST_PATH = path.resolve(__dirname, "..", "refresh-cdn.list");
+const MANUAL_PURGE_PREFIX_PATHS = ["live2d/"];
 const TERMINAL_FAILURE_STATUSES = new Set(["failed", "timeout", "canceled", "invalid"]);
 const DEFAULTS = {
   batchSize: 500,
@@ -223,7 +224,13 @@ function createUrlMapper(domain) {
   return (path) => new URL(encodePath(path), base).href;
 }
 
-function buildTargets(changes, domain) {
+function parentDirectoryPath(assetPath) {
+  const normalized = normalizeAssetPath(assetPath);
+  const separator = normalized.lastIndexOf("/");
+  return separator < 0 ? null : normalized.slice(0, separator + 1);
+}
+
+function buildTargets(changes, domain, forceList = false) {
   const toUrl = createUrlMapper(domain);
   const purgePaths = new Set();
   const prefetchPaths = new Set();
@@ -237,10 +244,35 @@ function buildTargets(changes, domain) {
     if (change.status !== "D") prefetchPaths.add(path);
   }
 
+  const prefixPaths = forceList
+    ? [...MANUAL_PURGE_PREFIX_PATHS]
+    : [...purgePaths].map(parentDirectoryPath).filter(Boolean);
+
   return {
     purgeUrls: [...purgePaths].sort().map(toUrl),
     prefetchUrls: [...prefetchPaths].sort().map(toUrl),
+    prefixPaths: [...new Set(prefixPaths)].sort(),
   };
+}
+
+function parentPrefixPath(prefixPath) {
+  const normalized = normalizeAssetPath(prefixPath).replace(/\/+$/, "");
+  const segments = normalized.split("/").filter(Boolean);
+  if (segments.length <= 1) return segments.length === 1 ? `${segments[0]}/` : null;
+  segments.pop();
+  return `${segments.join("/")}/`;
+}
+
+function collapsePrefixPathsToLimit(prefixPaths, limit) {
+  if (!Number.isInteger(limit) || limit <= 0) return null;
+  let current = [...new Set(prefixPaths.map((item) => `${normalizeAssetPath(item).replace(/\/+$/, "")}/`))].sort();
+
+  while (current.length > limit) {
+    const collapsed = [...new Set(current.map((item) => parentPrefixPath(item) || item))].sort();
+    if (collapsed.length === current.length && collapsed.every((item, index) => item === current[index])) return null;
+    current = collapsed;
+  }
+  return current;
 }
 
 function chunks(items, size) {
@@ -275,17 +307,68 @@ function resolveTeoClient(sdk) {
   return Client;
 }
 
-function assertCapacity(label, targetCount, quota, maxTargetsPerRun) {
-  if (targetCount === 0) return;
+function assessQuota(label, targetCount, quota, maxTargetsPerRun) {
+  if (targetCount === 0) return { available: false, reason: `${label} has no targets` };
   if (targetCount > maxTargetsPerRun) {
-    throw new Error(`${label} requires ${targetCount} targets, exceeding TEO_MAX_TARGETS_PER_RUN=${maxTargetsPerRun}`);
+    return { available: false, reason: `${label} requires ${targetCount} targets, exceeding TEO_MAX_TARGETS_PER_RUN=${maxTargetsPerRun}` };
   }
   if (!quota || !Number.isFinite(quota.Batch) || quota.Batch <= 0) {
-    throw new Error(`The current EdgeOne plan has no available ${label} quota`);
+    return { available: false, reason: `The current EdgeOne plan has no available ${label} batch quota` };
   }
   if (!Number.isFinite(quota.DailyAvailable) || quota.DailyAvailable < targetCount) {
-    throw new Error(`${label} requires ${targetCount} targets, but only ${quota.DailyAvailable ?? 0} daily quota remains`);
+    return { available: false, reason: `${label} requires ${targetCount} targets, but only ${quota?.DailyAvailable ?? 0} daily quota remains` };
   }
+  return {
+    available: true,
+    ratio: targetCount / quota.DailyAvailable,
+    reason: `${targetCount}/${quota.DailyAvailable} daily quota`,
+  };
+}
+
+function buildPurgeCandidates({ targetPlan, domain, quotaResponse, maxTargetsPerRun, forceList }) {
+  const toUrl = createUrlMapper(domain);
+  const urlQuota = quotaFor(quotaResponse.PurgeQuota, "purge_url");
+  const prefixQuota = quotaFor(quotaResponse.PurgeQuota, "purge_prefix");
+  const urlAssessment = assessQuota("URL purge", targetPlan.purgeUrls.length, urlQuota, maxTargetsPerRun);
+
+  let selectedPrefixPaths = [...targetPlan.prefixPaths];
+  if (prefixQuota?.Batch > 0 && prefixQuota?.DailyAvailable > 0) {
+    const prefixLimit = Math.min(prefixQuota.DailyAvailable, maxTargetsPerRun);
+    if (selectedPrefixPaths.length > prefixLimit) {
+      selectedPrefixPaths = collapsePrefixPathsToLimit(selectedPrefixPaths, prefixLimit) || [];
+    }
+  }
+  const prefixUrls = selectedPrefixPaths.map(toUrl);
+  const prefixAssessment = assessQuota("directory purge", prefixUrls.length, prefixQuota, maxTargetsPerRun);
+
+  return [
+    {
+      mode: "url",
+      label: "URL purge",
+      targets: targetPlan.purgeUrls,
+      quota: urlQuota,
+      assessment: urlAssessment,
+      createParams: { Type: "purge_url" },
+    },
+    {
+      mode: "prefix",
+      label: "directory purge",
+      targets: prefixUrls,
+      quota: prefixQuota,
+      assessment: prefixAssessment,
+      createParams: { Type: "purge_prefix", Method: "delete" },
+    },
+  ];
+}
+
+function orderPurgeCandidates(candidates, forceList, excludedMode) {
+  const available = candidates.filter((candidate) => candidate.assessment.available && candidate.mode !== excludedMode);
+  if (forceList) return available.sort((left, right) => Number(right.mode === "prefix") - Number(left.mode === "prefix"));
+  return available.sort((left, right) => {
+    const ratioDifference = left.assessment.ratio - right.assessment.ratio;
+    if (ratioDifference !== 0) return ratioDifference;
+    return left.mode === "url" ? -1 : 1;
+  });
 }
 
 function formatFailedList(items) {
@@ -348,6 +431,97 @@ async function waitForJobs(options, jobs) {
   for (const job of jobs) await waitForJob({ ...options, job });
 }
 
+function quotaDescription(quota) {
+  return `batch=${quota?.Batch ?? 0}, daily remaining=${quota?.DailyAvailable ?? 0}/${quota?.Daily ?? 0}`;
+}
+
+async function runPurgeWithFallback({
+  targetPlan,
+  domain,
+  initialQuotaResponse,
+  maxTargetsPerRun,
+  forceList,
+  refreshQuota,
+  executeCandidate,
+  warn = (title, message) => annotation("warning", title, message),
+}) {
+  const initialCandidates = buildPurgeCandidates({
+    targetPlan,
+    domain,
+    quotaResponse: initialQuotaResponse,
+    maxTargetsPerRun,
+    forceList,
+  });
+  for (const candidate of initialCandidates) {
+    console.log(`${candidate.label}: ${candidate.assessment.available ? `available (${candidate.assessment.reason})` : `unavailable (${candidate.assessment.reason})`}`);
+  }
+
+  const primary = orderPurgeCandidates(initialCandidates, forceList)[0];
+  if (!primary) {
+    throw new Error(`No purge method is available: ${initialCandidates.map((item) => item.assessment.reason).join("; ")}`);
+  }
+
+  console.log(`Selected ${primary.label}: ${primary.targets.length} targets${forceList ? " (manual directory preference)" : `, quota ratio=${primary.assessment.ratio.toFixed(4)}`}`);
+  try {
+    const jobs = await executeCandidate(primary);
+    return { candidate: primary, jobs, fallback: false };
+  } catch (primaryError) {
+    warn(`⚠ ${primary.label} failed`, `${primaryError.message || primaryError}; trying the alternate purge method`);
+    let refreshedQuota;
+    try {
+      refreshedQuota = await refreshQuota();
+    } catch (quotaError) {
+      throw new Error(`${primary.label} failed (${primaryError.message || primaryError}); unable to refresh quota for fallback (${quotaError.message || quotaError})`);
+    }
+    console.log(`Fallback URL purge quota: ${quotaDescription(quotaFor(refreshedQuota.PurgeQuota, "purge_url"))}`);
+    console.log(`Fallback directory purge quota: ${quotaDescription(quotaFor(refreshedQuota.PurgeQuota, "purge_prefix"))}`);
+
+    const fallbackCandidates = buildPurgeCandidates({
+      targetPlan,
+      domain,
+      quotaResponse: refreshedQuota,
+      maxTargetsPerRun,
+      forceList,
+    });
+    const fallback = orderPurgeCandidates(fallbackCandidates, forceList, primary.mode)[0];
+    if (!fallback) {
+      throw new Error(`${primary.label} failed (${primaryError.message || primaryError}); alternate purge unavailable: ${fallbackCandidates.filter((item) => item.mode !== primary.mode).map((item) => item.assessment.reason).join("; ")}`);
+    }
+
+    console.log(`Fallback selected: ${fallback.label} (${fallback.targets.length} targets)`);
+    try {
+      const jobs = await executeCandidate(fallback);
+      return { candidate: fallback, jobs, fallback: true, primaryFailure: primaryError.message || String(primaryError) };
+    } catch (fallbackError) {
+      throw new Error(`${primary.label} failed (${primaryError.message || primaryError}); ${fallback.label} also failed (${fallbackError.message || fallbackError})`);
+    }
+  }
+}
+
+async function runBestEffortPrefetch({
+  urls,
+  quota,
+  maxTargetsPerRun,
+  execute,
+  warn = (title, message) => annotation("warning", title, message),
+}) {
+  if (urls.length === 0) return { status: "Skipped", jobs: [], reason: "No current files require prefetch" };
+  const assessment = assessQuota("prefetch", urls.length, quota, maxTargetsPerRun);
+  if (!assessment.available) {
+    warn("⚠ Prefetch skipped", assessment.reason);
+    return { status: "Skipped", jobs: [], reason: assessment.reason };
+  }
+
+  try {
+    const jobs = await execute();
+    return { status: "Success", jobs };
+  } catch (error) {
+    const reason = error.message || String(error);
+    warn("⚠ Prefetch failed", `${reason}; purge already succeeded, so the workflow will continue`);
+    return { status: "Warning", jobs: [], reason };
+  }
+}
+
 function printUrlPlan(label, urls) {
   console.log(`${label}: ${urls.length}`);
   for (const url of urls) console.log(`  - ${url}`);
@@ -383,13 +557,15 @@ async function main() {
   if (!domain) throw new Error("Missing required environment variable: TEO_DOMAIN");
 
   group("Build CDN URL plan");
-  const { purgeUrls, prefetchUrls } = buildTargets(changes, domain);
-  printUrlPlan("Purge targets", purgeUrls);
-  printUrlPlan("Prefetch targets", prefetchUrls);
+  const targetPlan = buildTargets(changes, domain, forceList);
+  printUrlPlan("URL purge targets", targetPlan.purgeUrls);
+  console.log(`Directory candidates: ${targetPlan.prefixPaths.length}`);
+  for (const prefixPath of targetPlan.prefixPaths) console.log(`  - /${prefixPath}`);
+  printUrlPlan("Prefetch targets", targetPlan.prefetchUrls);
   endGroup();
 
   if (options.dryRun || process.env.TEO_DRY_RUN === "true") {
-    annotation("notice", "CDN dry run", `Would purge ${purgeUrls.length} URLs and prefetch ${prefetchUrls.length} URLs`);
+    annotation("notice", "CDN dry run", `Would select between ${targetPlan.purgeUrls.length} URL targets and ${targetPlan.prefixPaths.length} directory targets, then prefetch ${targetPlan.prefetchUrls.length} URLs`);
     return;
   }
 
@@ -420,65 +596,91 @@ async function main() {
 
   group("Check EdgeOne content-management quota");
   const quotaResponse = await call("DescribeContentQuota", { ZoneId: zoneId });
-  const purgeQuota = quotaFor(quotaResponse.PurgeQuota, "purge_url");
+  const purgeUrlQuota = quotaFor(quotaResponse.PurgeQuota, "purge_url");
+  const purgePrefixQuota = quotaFor(quotaResponse.PurgeQuota, "purge_prefix");
   const prefetchQuota = quotaFor(quotaResponse.PrefetchQuota, "prefetch_url");
-  console.log(`Purge quota: batch=${purgeQuota?.Batch ?? 0}, daily remaining=${purgeQuota?.DailyAvailable ?? 0}/${purgeQuota?.Daily ?? 0}`);
-  console.log(`Prefetch quota: batch=${prefetchQuota?.Batch ?? 0}, daily remaining=${prefetchQuota?.DailyAvailable ?? 0}/${prefetchQuota?.Daily ?? 0}`);
-  assertCapacity("purge", purgeUrls.length, purgeQuota, maxTargetsPerRun);
-  assertCapacity("prefetch", prefetchUrls.length, prefetchQuota, maxTargetsPerRun);
+  console.log(`URL purge quota: ${quotaDescription(purgeUrlQuota)}`);
+  console.log(`Directory purge quota: ${quotaDescription(purgePrefixQuota)}`);
+  console.log(`Prefetch quota: ${quotaDescription(prefetchQuota)}`);
   endGroup();
 
-  group("Purge changed EdgeOne URLs");
-  const purgeJobs = await createTasks({
-    label: "purge",
-    urls: purgeUrls,
-    batchSize: Math.min(configuredBatchSize, purgeQuota.Batch, TASK_QUERY_LIMIT),
-    createMethod: "CreatePurgeTask",
-    createParams: { ZoneId: zoneId, Type: "purge_url" },
-    call,
+  const executePurgeCandidate = async (candidate) => {
+    group(`Execute ${candidate.label}`);
+    try {
+      const jobs = await createTasks({
+        label: candidate.label,
+        urls: candidate.targets,
+        batchSize: Math.min(configuredBatchSize, candidate.quota.Batch, TASK_QUERY_LIMIT),
+        createMethod: "CreatePurgeTask",
+        createParams: { ZoneId: zoneId, ...candidate.createParams },
+        call,
+      });
+      await waitForJobs({
+        label: candidate.label,
+        describeMethod: "DescribePurgeTasks",
+        zoneId,
+        call,
+        pollIntervalMs,
+        timeoutMs,
+      }, jobs);
+      return jobs;
+    } finally {
+      endGroup();
+    }
+  };
+
+  const purgeResult = await runPurgeWithFallback({
+    targetPlan,
+    domain,
+    initialQuotaResponse: quotaResponse,
+    maxTargetsPerRun,
+    forceList,
+    refreshQuota: () => call("DescribeContentQuota", { ZoneId: zoneId }),
+    executeCandidate: executePurgeCandidate,
   });
-  await waitForJobs({
-    label: "purge",
-    describeMethod: "DescribePurgeTasks",
-    zoneId,
-    call,
-    pollIntervalMs,
-    timeoutMs,
-  }, purgeJobs);
-  endGroup();
 
-  let prefetchJobs = [];
-  if (prefetchUrls.length > 0) {
-    group("Prefetch changed EdgeOne URLs");
-    prefetchJobs = await createTasks({
-      label: "prefetch",
-      urls: prefetchUrls,
-      batchSize: Math.min(configuredBatchSize, prefetchQuota.Batch, TASK_QUERY_LIMIT),
-      createMethod: "CreatePrefetchTask",
-      createParams: { ZoneId: zoneId, Mode: prefetchMode },
-      call,
+  group("Best-effort prefetch");
+  let prefetchResult;
+  try {
+    prefetchResult = await runBestEffortPrefetch({
+      urls: targetPlan.prefetchUrls,
+      quota: prefetchQuota,
+      maxTargetsPerRun,
+      execute: async () => {
+        const jobs = await createTasks({
+          label: "prefetch",
+          urls: targetPlan.prefetchUrls,
+          batchSize: Math.min(configuredBatchSize, prefetchQuota.Batch, TASK_QUERY_LIMIT),
+          createMethod: "CreatePrefetchTask",
+          createParams: { ZoneId: zoneId, Mode: prefetchMode },
+          call,
+        });
+        await waitForJobs({
+          label: "prefetch",
+          describeMethod: "DescribePrefetchTasks",
+          zoneId,
+          call,
+          pollIntervalMs,
+          timeoutMs,
+        }, jobs);
+        return jobs;
+      },
     });
-    await waitForJobs({
-      label: "prefetch",
-      describeMethod: "DescribePrefetchTasks",
-      zoneId,
-      call,
-      pollIntervalMs,
-      timeoutMs,
-    }, prefetchJobs);
+  } finally {
     endGroup();
   }
 
-  annotation("notice", "EdgeOne CDN ready", `Purged ${purgeUrls.length} URLs and prefetched ${prefetchUrls.length} URLs`);
+  const purgeSummary = `${purgeResult.candidate.label}${purgeResult.fallback ? " (fallback)" : ""}`;
+  annotation("notice", "EdgeOne CDN ready", `Purged ${purgeResult.candidate.targets.length} targets via ${purgeSummary}; prefetch=${prefetchResult.status}`);
   writeSummary([
     "## EdgeOne CDN",
     "",
-    "| Operation | URLs | Jobs | Result |",
-    "| --- | ---: | ---: | --- |",
-    `| Purge | ${purgeUrls.length} | ${purgeJobs.length} | Success |`,
-    `| Prefetch | ${prefetchUrls.length} | ${prefetchJobs.length} | ${prefetchUrls.length ? "Success" : "Skipped (deleted files only)"} |`,
+    "| Operation | Mode | Targets | Jobs | Result |",
+    "| --- | --- | ---: | ---: | --- |",
+    `| Purge | ${purgeSummary} | ${purgeResult.candidate.targets.length} | ${purgeResult.jobs.length} | Success |`,
+    `| Prefetch | ${prefetchMode} | ${targetPlan.prefetchUrls.length} | ${prefetchResult.jobs.length} | ${prefetchResult.status}${prefetchResult.reason ? `: ${prefetchResult.reason}` : ""} |`,
     "",
-    `Prefetch mode: \`${prefetchMode}\``,
+    `Purged asset URLs covered: ${targetPlan.purgeUrls.length}`,
   ]);
 }
 
@@ -491,10 +693,16 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assessQuota,
   buildTargets,
+  buildPurgeCandidates,
+  collapsePrefixPathsToLimit,
   collectChanges,
   filterChangesByRefreshList,
   matchRefreshList,
+  orderPurgeCandidates,
   parseNameStatus,
   resolveTeoClient,
+  runBestEffortPrefetch,
+  runPurgeWithFallback,
 };
