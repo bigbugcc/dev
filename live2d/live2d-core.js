@@ -66,6 +66,8 @@
     touchList: [{ textKey: "models.default.touch" }],
   };
 
+  const MODEL_LOAD_RETRY_DELAY = 1500;
+
   function toUrl(path) {
     if (/^https?:\/\//i.test(path)) return path;
     return BASE_PATH + path.replace(/^\/+/, "");
@@ -323,6 +325,23 @@
       });
     }
 
+    createModel(modelUrl) {
+      return new Promise((resolve, reject) => {
+        let model;
+        model = PIXI.live2d.Live2DModel.fromSync(modelUrl, {
+          onLoad: () => resolve(model),
+          onError: (err) => {
+            try {
+              model.destroy({ children: true });
+            } catch (destroyError) {
+              console.warn("[Live2D] Failed to clean up an incomplete model:", destroyError);
+            }
+            reject(err);
+          },
+        });
+      });
+    }
+
     async loadModel(entry, showSwitchMessage = false) {
       const modelEntry = Utils.normalizeModelEntry(entry);
       this.modelConfig = await this.loadModelConfig(modelEntry);
@@ -331,27 +350,38 @@
         this.app.stage.removeChildren();
       }
 
-      const model = PIXI.live2d.Live2DModel.fromSync(toUrl(`models/${modelEntry.model}`));
+      const modelUrl = toUrl(`models/${modelEntry.model}`);
+      let model;
 
-      model.once("load", () => {
-        this.model = model;
-        this.app.stage.addChild(model);
+      try {
+        model = await this.createModel(modelUrl);
+      } catch (err) {
+        console.warn(
+          `[Live2D] Model load failed; retrying in ${MODEL_LOAD_RETRY_DELAY}ms:`,
+          modelEntry.name,
+          err
+        );
+        await new Promise((resolve) => setTimeout(resolve, MODEL_LOAD_RETRY_DELAY));
+        model = await this.createModel(modelUrl);
+      }
 
-        const scale = this.elements.canvas.height / model.height;
-        model.scale.set(scale);
-        this.elements.canvas.width = this.modelConfig.scaleWidth
-          ? model.width * this.modelConfig.scaleWidth
-          : model.width;
-        this.elements.canvas.height = model.height;
-        model.x = this.config.alignment === "left" ? 0 : this.elements.canvas.width - model.width;
+      this.model = model;
+      this.app.stage.addChild(model);
 
-        this.applyModelConfig(model, this.modelConfig);
-        this.setupModelInteraction(model, this.modelConfig);
+      const scale = this.elements.canvas.height / model.height;
+      model.scale.set(scale);
+      this.elements.canvas.width = this.modelConfig.scaleWidth
+        ? model.width * this.modelConfig.scaleWidth
+        : model.width;
+      this.elements.canvas.height = model.height;
+      model.x = this.config.alignment === "left" ? 0 : this.elements.canvas.width - model.width;
 
-        if (showSwitchMessage) {
-          this.showModelWelcome(modelEntry.name, "ui.skinReady");
-        }
-      });
+      this.applyModelConfig(model, this.modelConfig);
+      this.setupModelInteraction(model, this.modelConfig);
+
+      if (showSwitchMessage) {
+        this.showModelWelcome(modelEntry.name, "ui.skinReady");
+      }
     }
 
     applyModelConfig(model, cfg) {
