@@ -11,6 +11,10 @@
 - 新增和修改的文件先清除缓存，再进行预热。
 - 删除的文件只清除缓存，不进行预热。
 - 文件重命名时，旧 URL 和新 URL 都会清除缓存，但只预热新 URL。
+- URL 和目录清除分别使用独立配额。自动模式比较本次目标数占各自剩余日额度的比例，比例相同时优先 URL。
+- 目录清除使用直接删除；先使用变更文件的直接父目录，只有额度不足时才逐级收敛到顶层安全目录。
+- 首选清除方式失败后会重新查询配额，并用另一种方式完整重试一次；只有缓存清除无法成功时才终止工作流。
+- 预热为最佳努力：没有额度或任何预热错误都会输出带 `⚠` 的警告，但不会让已经成功的清除流程失败。
 - 所有部署任务串行执行，避免同时消耗同一份 EdgeOne 每日额度。
 - 创建任务前查询 EdgeOne 实时配额，并等待每个刷新和预热任务执行完成。
 
@@ -33,9 +37,9 @@
 
 ## 手动强制刷新
 
-进入 **Actions → Refresh and prefetch EdgeOne CDN → Run workflow**，选择 `main` 或 `master`。手动运行会忽略提交差异，枚举所选提交中受 Git 管理的全部文件，并强制刷新 `refresh-cdn.list` 命中的所有路径；通过 `!pattern` 排除的路径仍不会刷新。
+进入 **Actions → Refresh and prefetch EdgeOne CDN → Run workflow**，选择 `main` 或 `master`。手动运行会忽略提交差异，枚举所选提交中受 Git 管理的全部文件，并优先对 `TEO_DOMAIN/live2d/` 执行一次直接删除的目录清除。目录清除不可用或失败时，再降级为名单中全部文件的 URL 清除。
 
-手动运行仍受 `TEO_MAX_TARGETS_PER_RUN`、EdgeOne 实时单批/每日配额以及预热模式限制。该操作可能消耗较多刷新额度、预热额度、源站带宽和边缘流量。为保护生产 CDN，在其他分支上选择手动运行时任务会被跳过。
+目录清除会使整个目录失效，包括 `!pattern` 排除的缓存项；排除规则仍严格控制 URL 清除和预热目标。手动运行继续受 `TEO_MAX_TARGETS_PER_RUN`、实时配额和预热模式限制，且可能产生较多回源及边缘流量。在其他分支上手动运行时任务会被跳过。
 
 ## 必需的仓库 Secrets
 
@@ -65,7 +69,7 @@ SecretId 和 SecretKey 可在[腾讯云 API 密钥管理](https://console.cloud.
 | Variable | 默认值 | 说明 |
 | --- | ---: | --- |
 | `TEO_BATCH_SIZE` | `500` | 每个 API 任务提交的 URL 数量。实际值还会受 EdgeOne 实时单批配额及 1,000 条任务查询上限约束。 |
-| `TEO_MAX_TARGETS_PER_RUN` | `1000` | 单次工作流中刷新或预热目标数的安全上限。超出时会在消耗额度前失败。 |
+| `TEO_MAX_TARGETS_PER_RUN` | `1000` | 每种清除或预热操作的目标数安全上限。预热不可用时跳过；清除会先尝试另一种方式再失败。 |
 | `TEO_POLL_INTERVAL_SECONDS` | `5` | 查询任务状态的时间间隔。 |
 | `TEO_WAIT_TIMEOUT_SECONDS` | `600` | 等待每个 EdgeOne 任务完成的最长时间。 |
 | `TEO_PREFETCH_MODE` | `default` | `default` 预热至中间层；`edge` 预热至边缘层和中间层。 |
@@ -118,7 +122,8 @@ node scripts/refresh-cdn.js --dry-run "live2d/live2d-core.js"
 
 ## 常见问题
 
-- **没有可用的预热额度：** 当前 EdgeOne 套餐可能不支持 URL 预热，或当日额度已经用完。
+- **没有可用的预热额度：** 工作流输出 `⚠ Prefetch skipped`，缓存清除成功后仍保持成功状态。
+- **首选清除失败：** 工作流输出带 `⚠` 的警告、重新查询配额，并用 URL/目录的另一种方式完整重试一次。
 - **工作流已运行但跳过 CDN 步骤：** 本次变更没有路径命中 `refresh-cdn.list`，请检查轻量匹配步骤的日志和列表模式。
 - **目标数量超出限制：** 先检查检测到的文件；确认部署符合预期后，再有意识地提高 `TEO_MAX_TARGETS_PER_RUN`。
 - **任务等待超时：** 提高 `TEO_WAIT_TIMEOUT_SECONDS` 前，先检查 EdgeOne 任务记录及源站可用性。

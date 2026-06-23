@@ -11,6 +11,10 @@ The workflow starts for every push to `main` or `master`, and it can be run manu
 - Added and modified files are purged, then prefetched.
 - Deleted files are purged but not prefetched.
 - For renamed files, the old and new URLs are purged; only the new URL is prefetched.
+- URL and directory purge quotas are evaluated independently. The automatic mode consumes the smaller share of its remaining daily quota, with URL purge winning ties.
+- Directory purge uses direct deletion. It starts with immediate parent directories and collapses toward top-level safe directories only when quota is insufficient.
+- If the selected purge mode fails, the workflow refreshes quota and tries the other mode once. The workflow fails only when cache purge cannot succeed.
+- Prefetch is best effort: unavailable quota or any prefetch error produces a `⚠` warning without failing a successful purge.
 - Jobs are serialized to avoid competing for the same EdgeOne daily quota.
 - The workflow checks the live EdgeOne quota before creating tasks and waits for every purge and prefetch task to finish.
 
@@ -33,9 +37,9 @@ The supported syntax is the same as `.gitignore`, including comments (`#`), nega
 
 ## Manual force refresh
 
-Open **Actions → Refresh and prefetch EdgeOne CDN → Run workflow** and select `main` or `master`. A manual run ignores the commit diff, enumerates every file tracked in the selected commit, and force-refreshes every path matched by `refresh-cdn.list`. Files excluded with `!pattern` remain excluded.
+Open **Actions → Refresh and prefetch EdgeOne CDN → Run workflow** and select `main` or `master`. A manual run ignores the commit diff, enumerates every file tracked in the selected commit, and prefers one direct-delete directory purge for `TEO_DOMAIN/live2d/`. If directory purge is unavailable or fails, it falls back to URL purge for every path matched by `refresh-cdn.list`.
 
-Manual runs still enforce `TEO_MAX_TARGETS_PER_RUN`, the live EdgeOne batch and daily quotas, and the configured prefetch mode. They can consume substantial purge quota, prefetch quota, origin bandwidth, and edge traffic. Manual runs selected on other branches are skipped to protect the production CDN.
+Directory purge invalidates the entire directory, including cache entries excluded by `!pattern`; exclusions still strictly control URL purge and prefetch targets. Manual runs enforce `TEO_MAX_TARGETS_PER_RUN`, live quotas, and the configured prefetch mode. They can consume substantial origin bandwidth and edge traffic. Manual runs selected on other branches are skipped.
 
 ## Required repository secrets
 
@@ -65,7 +69,7 @@ Open **Repository → Settings → Secrets and variables → Actions → Variabl
 | Variable | Default | Description |
 | --- | ---: | --- |
 | `TEO_BATCH_SIZE` | `500` | Requested URLs per API task. The effective value is also capped by the live EdgeOne batch quota and the task-query limit of 1,000. |
-| `TEO_MAX_TARGETS_PER_RUN` | `1000` | Safety limit for purge or prefetch targets in one workflow run. The run fails before consuming quota when exceeded. |
+| `TEO_MAX_TARGETS_PER_RUN` | `1000` | Safety limit per purge or prefetch operation. An unavailable prefetch is skipped; purge tries its alternate mode before failing. |
 | `TEO_POLL_INTERVAL_SECONDS` | `5` | Interval between task-status queries. |
 | `TEO_WAIT_TIMEOUT_SECONDS` | `600` | Maximum wait time for each EdgeOne task. |
 | `TEO_PREFETCH_MODE` | `default` | `default` prefetches to the intermediate layer. `edge` prefetches to edge and intermediate layers. |
@@ -118,7 +122,8 @@ node scripts/refresh-cdn.js --dry-run "live2d/live2d-core.js"
 
 ## Troubleshooting
 
-- **No available prefetch quota:** the current EdgeOne plan may not include URL prefetch, or its daily quota is exhausted.
+- **No available prefetch quota:** the workflow logs `⚠ Prefetch skipped` and remains successful after cache purge.
+- **Selected purge failed:** the workflow logs a `⚠` warning, refreshes quota, and tries the alternate URL/directory method once.
 - **Workflow ran but CDN steps were skipped:** none of the changed paths matched `refresh-cdn.list`; inspect the lightweight matching step and the list patterns.
 - **Target limit exceeded:** review the detected files, then deliberately raise `TEO_MAX_TARGETS_PER_RUN` if the deployment is expected.
 - **Task timeout:** check the EdgeOne task history and origin availability before raising `TEO_WAIT_TIMEOUT_SECONDS`.
