@@ -17,7 +17,7 @@ Static Live2D Cubism 4 widget assets for CDN or local website usage.
 Use the hosted script:
 
 ```html
-<script src="https://cdn.bughero.net/d/dev/live2d/live2d-core.js"></script>
+<script src="https://cdn.bughero.net/dev/live2d/live2d-core.js"></script>
 ```
 
 Or use the local script from this repository:
@@ -61,8 +61,9 @@ The model name must match a `name` in `models/manifest.json`.
 
 ## Language
 
-The widget chooses its language in this order: URL query, script attributes, global config,
-the page's `<html lang>`, then the browser language. English is the default fallback.
+The widget chooses its language in this order: URL query, script attributes, global config, then
+the browser's ordered language preferences (`navigator.languages`). It uses the first available
+translation from that list; if none are supported, it falls back to English.
 
 ```html
 <script src="./live2d-core.js" data-lang="zh-CN"></script>
@@ -100,8 +101,9 @@ All visible widget and character text lives in `locales/interactions.json`. The 
 
 Language file values are arrays, and the widget avoids repeating any of the last five displayed
 messages. Regional locales fall back to the matching base language (for example, `zh-TW` can use
-`zh-CN`), then to `fallbackLocale`, English, and finally the default model text. Existing model
-configs using plain `welcome` and `text` values remain supported.
+`zh-CN`), then through the remaining browser language preferences, `fallbackLocale`, English, and
+finally the default model text. Existing model configs using plain `welcome` and `text` values
+remain supported.
 
 The language file path can be overridden without editing the core:
 
@@ -131,7 +133,7 @@ keeping the same structure, and select it with `locale`, `data-lang`, or a suppo
 If the language file cannot be loaded, the model and its motions continue to work without dialog.
 
 For a quick regression check, serve the directory and open `tests/interaction-tests.html`. A
-successful run displays `TESTS_OK 23`; it covers locale and empty-value fallback, time boundaries,
+successful run displays `TESTS_OK 24`; it covers browser locale priority, locale and empty-value fallback, time boundaries,
 both hemispheres, broad region mapping, default model text, deduplication, missing language data,
 hit-area routing, and canvas coordinate conversion.
 
@@ -223,3 +225,5 @@ The workflow runs `scripts/refresh-cdn.js` and requires these GitHub secrets:
 - `TENCENT_SECRET_KEY`
 - `TEO_ZONE_ID`
 - `TEO_DOMAIN`
+
+For the hosted URL above, set `TEO_DOMAIN` to `https://cdn.bughero.net/dev`. The refresh script appends repository paths such as `live2d/live2d-core.js` directly to this value.

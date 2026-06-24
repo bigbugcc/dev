@@ -48,6 +48,13 @@
         assert(textManager.getLocaleCandidates()[0] === "en", "unknown-locale fallback");
         assert(widget.getText("ui.home")[0] === "Back to home.", "English key lookup");
 
+        const browserPreferences = new Live2DModules.TextManager(["fr-FR", "zh-CN"], "en");
+        browserPreferences.setData(languageData);
+        assert(
+          browserPreferences.getLocaleCandidates()[0] === "zh-CN",
+          "next supported browser locale before English fallback"
+        );
+
         widget.config.locale = "zh-CN";
         textManager.locale = "zh-CN";
         const savedHome = languageData.locales["zh-CN"].ui.home;

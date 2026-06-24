@@ -50,15 +50,15 @@ Open **Repository → Settings → Secrets and variables → Actions → Secrets
 | `TENCENT_SECRET_ID` | Tencent Cloud API SecretId. | `AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `TENCENT_SECRET_KEY` | Tencent Cloud API SecretKey. | `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `TEO_ZONE_ID` | EdgeOne site ID (`ZoneId`). | `zone-xxxxxxxxxxxx` |
-| `TEO_DOMAIN` | Public CDN base URL to which repository paths are appended. Must include `http://` or `https://`. | `https://cdn.example.com` |
+| `TEO_DOMAIN` | Public CDN base URL to which repository paths are appended. Must include `http://` or `https://`. | `https://cdn.bughero.net/dev` |
 
 `TEO_DOMAIN` is the root before the repository path. For example, if the deployed asset is:
 
 ```text
-https://cdn.example.com/live2d/live2d-core.js
+https://cdn.bughero.net/dev/live2d/live2d-core.js
 ```
 
-set `TEO_DOMAIN` to `https://cdn.example.com`, not `https://cdn.example.com/live2d`. If the repository is published below a prefix, such as `https://cdn.example.com/project/live2d/...`, use `https://cdn.example.com/project`.
+set `TEO_DOMAIN` to `https://cdn.bughero.net/dev`, not `https://cdn.bughero.net` or `https://cdn.bughero.net/dev/live2d`. The refresh script appends repository paths such as `live2d/...` directly to this value.
 
 SecretId and SecretKey can be created in [Tencent Cloud API key management](https://console.cloud.tencent.com/cam/capi). The site ID is available in the [EdgeOne console](https://console.cloud.tencent.com/edgeone).
 
