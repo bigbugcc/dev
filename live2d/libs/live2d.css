@@ -79,8 +79,9 @@
 /* 对话框 */
 .pio-container .pio-dialog {
   position: absolute;
-  top: -2em;
-  z-index: -1;
+  top: auto;
+  bottom: calc(100% + .75em);
+  z-index: 1;
   min-width: 12em;
   padding: .75em 1em;
   font-size: .8em;
@@ -89,6 +90,7 @@
   border-radius: 1em;
   word-break: break-all;
   opacity: 0;
+  pointer-events: none;
   visibility: hidden;
   transition: opacity .3s, visibility .3s;
 }
