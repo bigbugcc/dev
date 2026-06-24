@@ -103,6 +103,19 @@
     return response.json();
   }
 
+  function getBrowserLocales() {
+    const locales = [];
+    const add = (locale) => {
+      const value = String(locale || "").trim();
+      if (value && !locales.includes(value)) locales.push(value);
+    };
+
+    if (Array.isArray(navigator.languages)) navigator.languages.forEach(add);
+    add(navigator.language);
+    add(navigator.userLanguage);
+    return locales.length > 0 ? locales : ["en"];
+  }
+
   function readExternalConfig() {
     const query = new URLSearchParams(window.location.search);
     const cssElement = document.querySelector(
@@ -133,9 +146,7 @@
         cssDataset.lang ||
         cssDataset.locale ||
         globalConfig.locale ||
-        document.documentElement.lang ||
-        navigator.language ||
-        "en",
+        getBrowserLocales(),
     };
   }
 
@@ -168,13 +179,15 @@
   class Live2DWidget {
     constructor(config = {}) {
       this.config = { ...CONFIG, ...readExternalConfig(), ...config };
-      this.config.locale = Live2DModules.normalizeLocale(this.config.locale);
+      const requestedLocales = Live2DModules.normalizeLocales(this.config.locale);
+      this.config.locale = requestedLocales[0];
+      this.config.locales = requestedLocales;
       const contextChance = Number(this.config.contextualTouchChance);
       this.config.contextualTouchChance = Number.isFinite(contextChance)
         ? Math.min(1, Math.max(0, contextChance))
         : CONFIG.contextualTouchChance;
       this.textManager = new Live2DModules.TextManager(
-        this.config.locale,
+        requestedLocales,
         this.config.fallbackLocale
       );
       this.currentModelIndex = 0;

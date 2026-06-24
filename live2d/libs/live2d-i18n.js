@@ -13,6 +13,15 @@
     return region ? `${language.toLowerCase()}-${region.toUpperCase()}` : language.toLowerCase();
   }
 
+  function normalizeLocales(locales) {
+    const normalized = (Array.isArray(locales) ? locales : [locales])
+      .map((locale) => String(locale || "").trim())
+      .filter(Boolean)
+      .map(normalizeLocale);
+    const unique = [...new Set(normalized)];
+    return unique.length > 0 ? unique : ["en"];
+  }
+
   function getByPath(value, path) {
     return String(path || "")
       .split(".")
@@ -32,7 +41,7 @@
 
   class TextManager {
     constructor(locale, fallbackLocale = "en", historyLimit = 5) {
-      this.locale = normalizeLocale(locale);
+      this.locale = Array.isArray(locale) ? normalizeLocales(locale) : normalizeLocale(locale);
       this.fallbackLocale = normalizeLocale(fallbackLocale);
       this.historyLimit = historyLimit;
       this.data = null;
@@ -46,9 +55,9 @@
     }
 
     getLocaleCandidates() {
+      const preferredLocales = normalizeLocales(this.locale);
       const requested = [
-        this.locale,
-        this.locale.split("-")[0],
+        ...preferredLocales.flatMap((locale) => [locale, locale.split("-")[0]]),
         this.fallbackLocale,
         this.fallbackLocale.split("-")[0],
         "en",
@@ -113,5 +122,6 @@
 
   window.Live2DModules = window.Live2DModules || {};
   window.Live2DModules.normalizeLocale = normalizeLocale;
+  window.Live2DModules.normalizeLocales = normalizeLocales;
   window.Live2DModules.TextManager = TextManager;
 })();

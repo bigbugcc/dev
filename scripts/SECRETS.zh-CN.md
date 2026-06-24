@@ -50,15 +50,15 @@
 | `TENCENT_SECRET_ID` | 腾讯云 API SecretId。 | `AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `TENCENT_SECRET_KEY` | 腾讯云 API SecretKey。 | `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `TEO_ZONE_ID` | EdgeOne 站点 ID（`ZoneId`）。 | `zone-xxxxxxxxxxxx` |
-| `TEO_DOMAIN` | 用于拼接仓库文件路径的 CDN 公网基础 URL，必须包含 `http://` 或 `https://`。 | `https://cdn.example.com` |
+| `TEO_DOMAIN` | 用于拼接仓库文件路径的 CDN 公网基础 URL，必须包含 `http://` 或 `https://`。 | `https://cdn.bughero.net/dev` |
 
 `TEO_DOMAIN` 应为仓库路径之前的根地址。例如资源实际地址为：
 
 ```text
-https://cdn.example.com/live2d/live2d-core.js
+https://cdn.bughero.net/dev/live2d/live2d-core.js
 ```
 
-则应将 `TEO_DOMAIN` 设置为 `https://cdn.example.com`，而不是 `https://cdn.example.com/live2d`。如果仓库发布在子路径下，例如 `https://cdn.example.com/project/live2d/...`，则填写 `https://cdn.example.com/project`。
+则应将 `TEO_DOMAIN` 设置为 `https://cdn.bughero.net/dev`，而不是 `https://cdn.bughero.net` 或 `https://cdn.bughero.net/dev/live2d`。刷新脚本会把仓库路径 `live2d/...` 直接追加到该值后面。
 
 SecretId 和 SecretKey 可在[腾讯云 API 密钥管理](https://console.cloud.tencent.com/cam/capi)中创建；站点 ID 可在 [EdgeOne 控制台](https://console.cloud.tencent.com/edgeone)中查看。
 
