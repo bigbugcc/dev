@@ -68,3 +68,8 @@ jobs:
           TEO_WAIT_TIMEOUT_SECONDS: ${{ vars.TEO_WAIT_TIMEOUT_SECONDS || '600' }}
           TEO_PREFETCH_MODE: ${{ vars.TEO_PREFETCH_MODE || 'default' }}
         run: node scripts/refresh-cdn.js --base "$CDN_BASE_SHA" --head "$CDN_HEAD_SHA"
+
+      - name: Delete workflow runs
+        uses: bigbugcc/delete-workflow-runs@main
+        with:
+          keep_minimum_runs: 1
